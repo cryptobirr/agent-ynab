@@ -8,6 +8,7 @@ from .db_init import initialize_database
 from .db_upsert import upsert_transaction
 from .db_query import get_untagged_transactions
 from .historical_match import find_historical_category
+from .sop_loader import load_categorization_rules
 
 __all__ = [
     'fetch_transactions',
@@ -16,4 +17,5 @@ __all__ = [
     'upsert_transaction',
     'get_untagged_transactions',
     'find_historical_category',
+    'load_categorization_rules',
 ]

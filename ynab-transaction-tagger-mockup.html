@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YNAB Transaction Tagger - Mockup</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [currentPage, setCurrentPage] = useState("landing");
+      const [transactions, setTransactions] = useState([]);
+      const [selectedTxns, setSelectedTxns] = useState(new Set());
+      const [expandedSplits, setExpandedSplits] = useState(new Set());
+      const [editingSplit, setEditingSplit] = useState(null);
+      const [editingCategory, setEditingCategory] = useState(null);
+      const [loading, setLoading] = useState(false);
+
+      // Mock category groups from YNAB
+      const categoryGroups = [
+        {
+          name: "Household",
+          categories: ["Groceries", "Household Items", "Rent", "Utilities"]
+        },
+        {
+          name: "Mekonen's",
+          categories: ["Personal", "Clothing", "Personal Care"]
+        },
+        {
+          name: "Eden's",
+          categories: ["Personal"]
+        },
+        {
+          name: "Transportation",
+          categories: ["Fuel", "Car Maintenance", "Public Transit"]
+        },
+        {
+          name: "Quality of Life (as needed)",
+          categories: ["Entertainment & Eating Out", "Hobbies", "Travel"]
+        },
+        {
+          name: "Infrastructure",
+          categories: ["Verizon", "Internet", "PG&E"]
+        },
+        {
+          name: "Inflow",
+          categories: ["Ready to Assign"]
+        }
+      ];
+
+      const pages = {
+        landing: <LandingPage onLoadTag={() => loadTransactions()} loading={loading} />,
+        approval: (
+          <ApprovalPage
+            transactions={transactions}
+            selectedTxns={selectedTxns}
+            setSelectedTxns={setSelectedTxns}
+            expandedSplits={expandedSplits}
+            setExpandedSplits={setExpandedSplits}
+            onEditSplit={setEditingSplit}
+            onEditCategory={setEditingCategory}
+            onSubmit={handleSubmit}
+          />
+        ),
+      };
+
+      function loadTransactions() {
+        setLoading(true);
+        setTimeout(() => {
+          const mockData = [
+            {
+              id: "txn1",
+              date: "2025-11-22",
+              payee: "Whole Foods",
+              amount: 127.43,
+              type: "single",
+              categoryGroup: "Household",
+              categoryName: "Groceries",
+              confidence: 0.85,
+              method: "historical",
+              reasoning: "85% of 50 previous transactions categorized as Household: Groceries",
+            },
+            {
+              id: "txn2",
+              date: "2025-11-21",
+              payee: "Walmart #1234",
+              amount: 85.99,
+              type: "split",
+              confidence: 0.90,
+              method: "sop_rule",
+              reasoning: "Walmart split pattern from SOP rule",
+              splits: [
+                { categoryGroup: "Household", categoryName: "Groceries", percentage: 60, amount: 51.59 },
+                { categoryGroup: "Household", categoryName: "Household Items", percentage: 30, amount: 25.80 },
+                { categoryGroup: "Mekonen's", categoryName: "Personal Care", percentage: 10, amount: 8.60 },
+              ],
+            },
+            {
+              id: "txn3",
+              date: "2025-11-20",
+              payee: "Shell Gas #4523",
+              amount: 45.00,
+              type: "single",
+              categoryGroup: "Transportation",
+              categoryName: "Fuel",
+              confidence: 0.92,
+              method: "historical",
+              reasoning: "92% of 38 previous transactions categorized as Transportation: Fuel",
+            },
+            {
+              id: "txn4",
+              date: "2025-11-19",
+              payee: "Amazon.com",
+              amount: 67.84,
+              type: "single",
+              categoryGroup: "Mekonen's",
+              categoryName: "Personal",
+              confidence: 0.95,
+              method: "sop_rule",
+              reasoning: "Matched SOP rule: Amazon → Mekonen's: Personal",
+            },
+            {
+              id: "txn5",
+              date: "2025-11-18",
+              payee: "Joe's Coffee Shop",
+              amount: 12.50,
+              type: "single",
+              categoryGroup: "Quality of Life (as needed)",
+              categoryName: "Entertainment & Eating Out",
+              confidence: 0.68,
+              method: "research_reasoning",
+              reasoning: "WebSearch identified local coffee shop",
+            },
+            {
+              id: "txn6",
+              date: "2025-11-18",
+              payee: "Target #2156",
+              amount: 124.37,
+              type: "split",
+              confidence: 0.82,
+              method: "sop_rule",
+              reasoning: "Target split pattern from SOP rule",
+              splits: [
+                { categoryGroup: "Household", categoryName: "Groceries", percentage: 40, amount: 49.75 },
+                { categoryGroup: "Household", categoryName: "Household Items", percentage: 35, amount: 43.53 },
+                { categoryGroup: "Mekonen's", categoryName: "Clothing", percentage: 25, amount: 31.09 },
+              ],
+            },
+            {
+              id: "txn7",
+              date: "2025-11-17",
+              payee: "Chipotle Mexican Grill",
+              amount: 18.92,
+              type: "single",
+              categoryGroup: "Quality of Life (as needed)",
+              categoryName: "Entertainment & Eating Out",
+              confidence: 0.88,
+              method: "historical",
+              reasoning: "88% of 15 previous transactions categorized as Quality of Life: Entertainment",
+            },
+            {
+              id: "txn8",
+              date: "2025-11-16",
+              payee: "Costco Wholesale",
+              amount: 237.54,
+              type: "split",
+              confidence: 0.75,
+              method: "sop_rule",
+              reasoning: "Costco split pattern from SOP rule",
+              splits: [
+                { categoryGroup: "Household", categoryName: "Groceries", percentage: 70, amount: 166.28 },
+                { categoryGroup: "Household", categoryName: "Household Items", percentage: 20, amount: 47.51 },
+                { categoryGroup: "Transportation", categoryName: "Fuel", percentage: 10, amount: 23.75 },
+              ],
+            },
+          ];
+          setTransactions(mockData);
+          setSelectedTxns(new Set(mockData.map((t) => t.id)));
+          setCurrentPage("approval");
+          setLoading(false);
+        }, 1500);
+      }
+
+      function handleSubmit() {
+        alert(`Submitting ${selectedTxns.size} approved transactions to YNAB...`);
+        setCurrentPage("landing");
+        setTransactions([]);
+        setSelectedTxns(new Set());
+      }
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+          {pages[currentPage]}
+
+          {/* Category Selector Modal */}
+          {editingCategory && (
+            <CategorySelectorModal
+              transaction={editingCategory}
+              categoryGroups={categoryGroups}
+              onClose={() => setEditingCategory(null)}
+              onSelectCategory={(group, category) => {
+                setTransactions(
+                  transactions.map((t) =>
+                    t.id === editingCategory.id
+                      ? { ...t, categoryGroup: group, categoryName: category, type: "single" }
+                      : t
+                  )
+                );
+                setEditingCategory(null);
+              }}
+              onSplit={() => {
+                setEditingSplit(editingCategory);
+                setEditingCategory(null);
+              }}
+            />
+          )}
+
+          {/* Split Transaction Modal */}
+          {editingSplit && (
+            <SplitTransactionModal
+              transaction={editingSplit}
+              categoryGroups={categoryGroups}
+              onClose={() => setEditingSplit(null)}
+              onSave={(updated) => {
+                setTransactions(
+                  transactions.map((t) => (t.id === updated.id ? updated : t))
+                );
+                setEditingSplit(null);
+              }}
+            />
+          )}
+        </div>
+      );
+    }
+
+    function LandingPage({ onLoadTag, loading }) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="bg-white rounded-2xl shadow-xl p-12 max-w-2xl w-full text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+              <span className="text-4xl">💰</span>
+            </div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-4">
+              YNAB Transaction Tagger
+            </h1>
+            <p className="text-lg text-slate-600 mb-8">
+              Intelligent self-learning agent that categorizes your transactions
+              using SOP rules, historical patterns, and AI-powered research.
+            </p>
+
+            <div className="bg-slate-50 rounded-xl p-6 mb-8">
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <div className="text-3xl font-bold text-green-600">95%</div>
+                  <div className="text-sm text-slate-600 mt-1">Accuracy</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">83%</div>
+                  <div className="text-sm text-slate-600 mt-1">Time Saved</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-purple-600">3-Tier</div>
+                  <div className="text-sm text-slate-600 mt-1">AI Logic</div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={onLoadTag}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="animate-spin">⏳</span>
+                  Loading & Tagging Transactions...
+                </span>
+              ) : (
+                "Load & Tag Transactions"
+              )}
+            </button>
+
+            <div className="mt-8 text-sm text-slate-500">
+              <p className="mb-2">
+                <strong>Tier 1:</strong> SOP Rules (Highest Confidence)
+              </p>
+              <p className="mb-2">
+                <strong>Tier 2:</strong> Historical SQL Patterns (≥80% match)
+              </p>
+              <p>
+                <strong>Tier 3:</strong> Web Research + AI Reasoning
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ApprovalPage({
+      transactions,
+      selectedTxns,
+      setSelectedTxns,
+      expandedSplits,
+      setExpandedSplits,
+      onEditSplit,
+      onEditCategory,
+      onSubmit,
+    }) {
+      const allSelected = selectedTxns.size === transactions.length;
+
+      function toggleSelectAll() {
+        if (allSelected) {
+          setSelectedTxns(new Set());
+        } else {
+          setSelectedTxns(new Set(transactions.map((t) => t.id)));
+        }
+      }
+
+      function toggleTransaction(id) {
+        const newSet = new Set(selectedTxns);
+        if (newSet.has(id)) {
+          newSet.delete(id);
+        } else {
+          newSet.add(id);
+        }
+        setSelectedTxns(newSet);
+      }
+
+      function toggleSplitExpanded(id) {
+        const newSet = new Set(expandedSplits);
+        if (newSet.has(id)) {
+          newSet.delete(id);
+        } else {
+          newSet.add(id);
+        }
+        setExpandedSplits(newSet);
+      }
+
+      return (
+        <div className="min-h-screen bg-white">
+          {/* Header */}
+          <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  YNAB Transaction Tagger
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  {transactions.length} untagged transactions • {selectedTxns.size} selected for approval
+                </p>
+              </div>
+              <button
+                onClick={onSubmit}
+                disabled={selectedTxns.size === 0}
+                className="bg-green-600 text-white px-6 py-2 rounded font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Submit ({selectedTxns.size})
+              </button>
+            </div>
+          </div>
+
+          {/* Transaction Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-slate-100 border-b border-slate-200 sticky top-0">
+                <tr>
+                  <th className="w-10 px-3 py-2 text-left">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-slate-300 text-green-600"
+                    />
+                  </th>
+                  <th className="w-10 px-3 py-2"></th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Payee</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Category</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Method</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Confidence</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-700 uppercase tracking-wide">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((txn) => (
+                  <TransactionRow
+                    key={txn.id}
+                    transaction={txn}
+                    selected={selectedTxns.has(txn.id)}
+                    onToggle={() => toggleTransaction(txn.id)}
+                    expanded={expandedSplits.has(txn.id)}
+                    onToggleExpanded={() => toggleSplitExpanded(txn.id)}
+                    onEditSplit={() => onEditSplit(txn)}
+                    onEditCategory={() => onEditCategory(txn)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    function TransactionRow({
+      transaction,
+      selected,
+      onToggle,
+      expanded,
+      onToggleExpanded,
+      onEditSplit,
+      onEditCategory,
+    }) {
+      const methodColors = {
+        sop_rule: "bg-purple-100 text-purple-700",
+        historical: "bg-blue-100 text-blue-700",
+        research_reasoning: "bg-orange-100 text-orange-700",
+      };
+
+      const methodLabels = {
+        sop_rule: "SOP",
+        historical: "Historical",
+        research_reasoning: "Research",
+      };
+
+      const confidenceColor = (conf) => {
+        if (conf >= 0.9) return "text-green-700 font-semibold";
+        if (conf >= 0.75) return "text-blue-700 font-medium";
+        return "text-orange-700";
+      };
+
+      return (
+        <>
+          <tr
+            className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+              selected ? "bg-blue-50" : ""
+            }`}
+          >
+            <td className="px-3 py-2">
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={onToggle}
+                className="w-4 h-4 rounded border-slate-300 text-green-600"
+              />
+            </td>
+            <td className="px-3 py-2">
+              {transaction.type === "split" && (
+                <button
+                  onClick={onToggleExpanded}
+                  className="text-slate-500 hover:text-slate-700 text-sm"
+                  title="View split details"
+                >
+                  {expanded ? "▼" : "▶"}
+                </button>
+              )}
+            </td>
+            <td className="px-3 py-2 text-sm text-slate-700 whitespace-nowrap">
+              {transaction.date}
+            </td>
+            <td className="px-3 py-2 text-sm font-medium text-slate-900">
+              {transaction.payee}
+            </td>
+            <td className="px-3 py-2 text-sm">
+              {transaction.type === "single" ? (
+                <button
+                  onClick={onEditCategory}
+                  className="text-slate-900 hover:bg-slate-100 px-2 py-1 rounded transition-colors text-left w-full"
+                >
+                  {transaction.categoryGroup}: {transaction.categoryName}
+                </button>
+              ) : (
+                <button
+                  onClick={onEditSplit}
+                  className="text-purple-700 font-medium hover:bg-purple-50 px-2 py-1 rounded transition-colors"
+                >
+                  [Split Transaction]
+                </button>
+              )}
+            </td>
+            <td className="px-3 py-2">
+              <span className={`px-2 py-1 rounded text-xs font-medium ${methodColors[transaction.method]}`}>
+                {methodLabels[transaction.method]}
+              </span>
+            </td>
+            <td className={`px-3 py-2 text-sm ${confidenceColor(transaction.confidence)}`}>
+              {(transaction.confidence * 100).toFixed(0)}%
+            </td>
+            <td className="px-3 py-2 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">
+              ${transaction.amount.toFixed(2)}
+            </td>
+          </tr>
+
+          {/* Expanded Split Details Row */}
+          {transaction.type === "split" && expanded && (
+            <tr className="bg-slate-50 border-b border-slate-200">
+              <td colSpan="8" className="px-3 py-4">
+                <div className="ml-12 max-w-3xl">
+                  <div className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">
+                    Split Allocation - {transaction.reasoning}
+                  </div>
+                  <div className="space-y-1">
+                    {transaction.splits.map((split, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-white px-4 py-2 rounded border border-slate-200">
+                        <span className="text-sm font-medium text-slate-900">{split.categoryGroup}: {split.categoryName}</span>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-slate-600">{split.percentage}%</span>
+                          <span className="font-semibold text-slate-900 w-20 text-right">${split.amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          )}
+        </>
+      );
+    }
+
+    function CategorySelectorModal({ transaction, categoryGroups, onClose, onSelectCategory, onSplit, hideSplitButton }) {
+      const currentCategory = transaction.categoryGroup && transaction.categoryName
+        ? `${transaction.categoryName} (${transaction.categoryGroup})`
+        : "Select a category...";
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+          <div className="bg-white rounded-lg shadow-2xl w-96 max-h-[600px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Selected Category */}
+            <div className="border-b border-slate-200 p-4">
+              <div className="text-xs font-semibold text-slate-600 uppercase mb-2">Selected</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span className="font-medium">{currentCategory}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Groups */}
+            <div className="overflow-y-auto max-h-[400px]">
+              {categoryGroups.map((group) => (
+                <div key={group.name} className="border-b border-slate-100">
+                  <div className="px-4 py-2 text-xs font-semibold text-slate-600 uppercase bg-slate-50">
+                    {group.name}
+                  </div>
+                  {group.categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => onSelectCategory(group.name, category)}
+                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-900">{category}</span>
+                        {transaction.categoryGroup === group.name && transaction.categoryName === category && (
+                          <span className="text-green-600">✓</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Actions - Only show if not hidden */}
+            {!hideSplitButton && (
+              <div className="border-t border-slate-200 p-3 bg-slate-50 grid grid-cols-2 gap-2">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-slate-700 hover:bg-slate-200 rounded font-medium transition-colors text-sm"
+                >
+                  Payment/Transfer
+                </button>
+                <button
+                  onClick={onSplit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Split
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function SplitTransactionModal({ transaction, categoryGroups, onClose, onSave }) {
+      const [splits, setSplits] = useState(
+        transaction.splits && transaction.splits.length > 0
+          ? transaction.splits.map(s => ({
+              categoryGroup: s.categoryGroup,
+              categoryName: s.categoryName,
+              memo: s.memo || "",
+              outflow: s.amount || 0,
+              inflow: 0
+            }))
+          : [
+              { categoryGroup: "", categoryName: "", memo: "", outflow: 0, inflow: 0 },
+              { categoryGroup: "", categoryName: "", memo: "", outflow: 0, inflow: 0 }
+            ]
+      );
+
+      function addSplit() {
+        setSplits([...splits, { categoryGroup: "", categoryName: "", memo: "", outflow: 0, inflow: 0 }]);
+      }
+
+      function removeSplit(index) {
+        setSplits(splits.filter((_, i) => i !== index));
+      }
+
+      function updateSplit(index, field, value) {
+        const newSplits = [...splits];
+        newSplits[index] = { ...newSplits[index], [field]: value };
+        setSplits(newSplits);
+      }
+
+      function selectCategory(index, groupName, categoryName) {
+        const newSplits = [...splits];
+        newSplits[index] = { ...newSplits[index], categoryGroup: groupName, categoryName };
+        setSplits(newSplits);
+      }
+
+      const totalAssigned = splits.reduce((sum, s) => sum + parseFloat(s.outflow || 0), 0);
+      const remaining = transaction.amount - totalAssigned;
+
+      function handleApprove() {
+        if (Math.abs(remaining) > 0.01) {
+          alert("Amount remaining must be $0.00");
+          return;
+        }
+        // Convert to format with percentages
+        const formattedSplits = splits.map(s => ({
+          categoryGroup: s.categoryGroup,
+          categoryName: s.categoryName,
+          amount: parseFloat(s.outflow || 0),
+          percentage: (parseFloat(s.outflow || 0) / transaction.amount) * 100
+        }));
+        onSave({ ...transaction, type: "split", splits: formattedSplits });
+      }
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+          <div className="bg-white rounded-lg shadow-2xl w-[900px] max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-slate-200">
+              <h3 className="text-xl font-bold text-slate-900">Split Transaction</h3>
+              <p className="text-sm text-slate-600 mt-1">
+                {transaction.payee} - ${transaction.amount.toFixed(2)}
+              </p>
+            </div>
+
+            <div className="overflow-y-auto max-h-[500px] p-6">
+              <div className="space-y-3">
+                {splits.map((split, idx) => (
+                  <SplitRow
+                    key={idx}
+                    split={split}
+                    index={idx}
+                    categoryGroups={categoryGroups}
+                    onUpdate={updateSplit}
+                    onSelectCategory={selectCategory}
+                    onRemove={() => removeSplit(idx)}
+                    canRemove={splits.length > 1}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={addSplit}
+                className="mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+              >
+                <span className="text-lg">+</span> Add another split
+              </button>
+
+              <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-900">Amount remaining to assign:</span>
+                  <div className="flex gap-8">
+                    <span className={`font-bold ${Math.abs(remaining) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${remaining.toFixed(2)}
+                    </span>
+                    <span className="text-slate-400">$0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 p-4 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 text-slate-700 hover:bg-slate-200 rounded font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprove}
+                className="px-6 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
+              >
+                Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SplitRow({ split, index, categoryGroups, onUpdate, onSelectCategory, onRemove, canRemove }) {
+      const [showCategoryModal, setShowCategoryModal] = useState(false);
+
+      const mockTransaction = {
+        categoryGroup: split.categoryGroup,
+        categoryName: split.categoryName
+      };
+
+      return (
+        <>
+          <div className="relative bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-12 gap-3 items-center">
+              {/* Payee - Read Only */}
+              <div className="col-span-3">
+                <input
+                  type="text"
+                  value="payee"
+                  disabled
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-slate-100 text-slate-500"
+                />
+              </div>
+
+              {/* Category */}
+              <div className="col-span-4">
+                <button
+                  onClick={() => setShowCategoryModal(true)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm text-left hover:bg-white transition-colors bg-white"
+                >
+                  {split.categoryGroup && split.categoryName
+                    ? `${split.categoryGroup}: ${split.categoryName}`
+                    : "category"}
+                </button>
+              </div>
+
+              {/* Memo */}
+              <div className="col-span-2">
+                <input
+                  type="text"
+                  placeholder="memo"
+                  value={split.memo || ""}
+                  onChange={(e) => onUpdate(index, "memo", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
+                />
+              </div>
+
+              {/* Outflow */}
+              <div className="col-span-2">
+                <input
+                  type="number"
+                  placeholder="outflow"
+                  value={split.outflow || ""}
+                  onChange={(e) => onUpdate(index, "outflow", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm text-right"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+
+              {/* Inflow */}
+              <div className="col-span-1">
+                <input
+                  type="number"
+                  placeholder="inflow"
+                  value={split.inflow || ""}
+                  onChange={(e) => onUpdate(index, "inflow", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm text-right bg-slate-50"
+                  step="0.01"
+                  min="0"
+                  disabled
+                />
+              </div>
+            </div>
+
+            {canRemove && (
+              <button
+                onClick={onRemove}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* Category Selector Modal for this split row */}
+          {showCategoryModal && (
+            <CategorySelectorModal
+              transaction={mockTransaction}
+              categoryGroups={categoryGroups}
+              onClose={() => setShowCategoryModal(false)}
+              onSelectCategory={(group, category) => {
+                onSelectCategory(index, group, category);
+                setShowCategoryModal(false);
+              }}
+              onSplit={null}
+              hideSplitButton={true}
+            />
+          )}
+        </>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
