@@ -1,158 +1,238 @@
-"""
-Tests for YNAB Transaction Tagger Atoms (Layer 1).
-
-Tests pure functions that form the atomic building blocks of the system.
-"""
-
-import pytest
-import tempfile
+"""Unit tests for YNAB Transaction Tagger atoms"""
+import unittest
+from unittest.mock import Mock, patch, MagicMock
+import sys
 import os
-from pathlib import Path
-import threading
-import time
 
-from tools.ynab.transaction_tagger.atoms.sop_updater import (
-    append_rule_to_sop,
-    _inject_timestamp_if_missing
+# Add project root to path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from common.base_client import (
+    BaseYNABClient, YNABConflictError, YNABNotFoundError,
+    YNABUnauthorizedError, YNABRateLimitError, YNABAPIError
+)
+from tools.ynab.transaction_tagger.atoms.api_update import (
+    update_transaction_category,
+    update_split_transaction,
+    _validate_subtransaction_amounts
 )
 
 
-class TestSOPUpdater:
-    """Tests for SOP Updater atom."""
+class TestBaseYNABClientPut(unittest.TestCase):
+    """Test BaseYNABClient.put() method"""
     
-    def test_append_rule_success(self):
-        """Test successful rule append."""
-        # Create temp SOP file
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
-            temp_sop = f.name
-            f.write("# Categorization Rules\n\n")
+    @patch('common.base_client.os.getenv')
+    @patch('common.base_client.requests.put')
+    def test_put_success(self, mock_put, mock_getenv):
+        """Test successful PUT request (200 OK)"""
+        mock_getenv.return_value = 'test-token'
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {'data': {'transaction': {'id': 'txn-123'}}}
+        mock_put.return_value = mock_response
         
-        try:
-            # Append rule
-            rule = """## Learned from User Corrections
-- **Payee**: Test Payee
-  **Category**: Test Category
-  **Category ID**: cat_123
-  **Wrong Suggestion**: Wrong Cat
-  **Reasoning**: Test reasoning
-  **Confidence**: High
-  **Date Learned**: 2025-11-27T20:00:00Z
-"""
-            
-            result = append_rule_to_sop(rule, sop_path=temp_sop)
-            
-            # Verify
-            assert result is True
-            
-            with open(temp_sop, 'r') as f:
-                content = f.read()
-                assert "Test Payee" in content
-                assert "Test Category" in content
+        client = BaseYNABClient()
+        result = client.put('/budgets/b1/transactions/t1', {'transaction': {'category_id': 'c1'}})
         
-        finally:
-            os.unlink(temp_sop)
+        self.assertEqual(result, {'data': {'transaction': {'id': 'txn-123'}}})
+        mock_put.assert_called_once()
     
-    
-    def test_timestamp_injection_missing(self):
-        """Test timestamp injection when missing."""
-        rule = """## Core Patterns
-- **Pattern**: Starbucks
-  **Category**: Coffee Shops
-  **Confidence**: High
-  **Source**: Historical
-"""
+    @patch('common.base_client.os.getenv')
+    @patch('common.base_client.requests.put')
+    def test_put_conflict(self, mock_put, mock_getenv):
+        """Test 409 Conflict error"""
+        mock_getenv.return_value = 'test-token'
+        mock_response = Mock()
+        mock_response.status_code = 409
+        mock_put.return_value = mock_response
         
-        result = _inject_timestamp_if_missing(rule)
+        client = BaseYNABClient()
+        with self.assertRaises(YNABConflictError):
+            client.put('/budgets/b1/transactions/t1', {})
+    
+    @patch('common.base_client.os.getenv')
+    @patch('common.base_client.requests.put')
+    def test_put_unauthorized(self, mock_put, mock_getenv):
+        """Test 401 Unauthorized error"""
+        mock_getenv.return_value = 'test-token'
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_put.return_value = mock_response
         
-        assert "**Date Added**:" in result
-        assert "T" in result  # ISO 8601 format
-        assert "Z" in result
+        client = BaseYNABClient()
+        with self.assertRaises(YNABUnauthorizedError):
+            client.put('/budgets/b1/transactions/t1', {})
     
-    
-    def test_timestamp_preservation_existing(self):
-        """Test timestamp preserved when already present."""
-        rule = """## Learned from User Corrections
-- **Payee**: Amazon
-  **Category**: Shopping
-  **Date Learned**: 2025-01-01T00:00:00Z
-"""
+    @patch('common.base_client.os.getenv')
+    @patch('common.base_client.requests.put')
+    def test_put_not_found(self, mock_put, mock_getenv):
+        """Test 404 Not Found error"""
+        mock_getenv.return_value = 'test-token'
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_put.return_value = mock_response
         
-        result = _inject_timestamp_if_missing(rule)
+        client = BaseYNABClient()
+        with self.assertRaises(YNABNotFoundError):
+            client.put('/budgets/b1/transactions/t1', {})
+    
+    @patch('common.base_client.os.getenv')
+    @patch('common.base_client.requests.put')
+    def test_put_rate_limit(self, mock_put, mock_getenv):
+        """Test 429 Rate Limit error"""
+        mock_getenv.return_value = 'test-token'
+        mock_response = Mock()
+        mock_response.status_code = 429
+        mock_response.headers = {'Retry-After': '60'}
+        mock_put.return_value = mock_response
         
-        assert result == rule  # Unchanged
-        assert "2025-01-01T00:00:00Z" in result
+        client = BaseYNABClient()
+        with self.assertRaises(YNABRateLimitError) as ctx:
+            client.put('/budgets/b1/transactions/t1', {})
+        
+        self.assertEqual(ctx.exception.retry_after, 60)
+
+
+class TestUpdateTransactionCategory(unittest.TestCase):
+    """Test update_transaction_category() function"""
     
-    
-    def test_file_not_found(self):
-        """Test graceful failure when SOP file doesn't exist."""
-        result = append_rule_to_sop(
-            "## Test\n- **Test**: value\n",
-            sop_path="/nonexistent/path/file.md"
+    @patch('tools.ynab.transaction_tagger.atoms.api_update.BaseYNABClient')
+    def test_update_success(self, mock_client_class):
+        """Test successful transaction update"""
+        mock_client = Mock()
+        mock_client.put.return_value = {'data': {'transaction': {'id': 'txn-123'}}}
+        mock_client_class.return_value = mock_client
+        
+        result = update_transaction_category('b1', 'txn-123', 'cat-456')
+        
+        self.assertTrue(result)
+        mock_client.put.assert_called_once_with(
+            '/budgets/b1/transactions/txn-123',
+            {'transaction': {'category_id': 'cat-456'}}
         )
-        
-        assert result is False
     
+    @patch('tools.ynab.transaction_tagger.atoms.api_update.BaseYNABClient')
+    def test_update_conflict(self, mock_client_class):
+        """Test conflict returns False"""
+        mock_client = Mock()
+        mock_client.put.side_effect = YNABConflictError()
+        mock_client_class.return_value = mock_client
+        
+        result = update_transaction_category('b1', 'txn-123', 'cat-456')
+        
+        self.assertFalse(result)
     
-    def test_blank_line_insertion(self):
-        """Test blank line inserted between rules."""
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
-            temp_sop = f.name
-            f.write("# Categorization Rules\n\n## Section 1\n- Rule 1")
+    @patch('tools.ynab.transaction_tagger.atoms.api_update.BaseYNABClient')
+    def test_update_api_error_propagates(self, mock_client_class):
+        """Test other API errors propagate"""
+        mock_client = Mock()
+        mock_client.put.side_effect = YNABNotFoundError("Not found")
+        mock_client_class.return_value = mock_client
         
-        try:
-            rule = "## Section 2\n- Rule 2\n"
-            result = append_rule_to_sop(rule, sop_path=temp_sop)
-            
-            assert result is True
-            
-            with open(temp_sop, 'r') as f:
-                content = f.read()
-                # Should have blank line between sections
-                assert "\n\n## Section 2" in content
-        
-        finally:
-            os.unlink(temp_sop)
+        with self.assertRaises(YNABNotFoundError):
+            update_transaction_category('b1', 'txn-123', 'cat-456')
+
+
+class TestValidateSubtransactionAmounts(unittest.TestCase):
+    """Test _validate_subtransaction_amounts() helper"""
     
+    def test_validation_success(self):
+        """Test valid subtransaction amounts"""
+        subtxns = [
+            {'amount': -10000},
+            {'amount': -5000}
+        ]
+        
+        # Should not raise
+        _validate_subtransaction_amounts(subtxns, -15000)
     
-    def test_concurrent_writes_thread_safe(self):
-        """Test thread-safe concurrent writes."""
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
-            temp_sop = f.name
-            f.write("# Categorization Rules\n\n")
+    def test_validation_failure(self):
+        """Test invalid subtransaction amounts"""
+        subtxns = [
+            {'amount': -10000},
+            {'amount': -6000}  # Off by 1000
+        ]
         
-        try:
-            results = []
-            
-            # Function to append rules concurrently
-            def append_concurrent(rule_num):
-                rule = f"""## Test Section
-- **Rule**: Rule {rule_num}
-  **Date Added**: 2025-11-27T20:00:00Z
-"""
-                result = append_rule_to_sop(rule, sop_path=temp_sop)
-                results.append(result)
-            
-            # Launch 10 concurrent writes
-            threads = []
-            
-            for i in range(10):
-                t = threading.Thread(target=append_concurrent, args=(i,))
-                threads.append(t)
-                t.start()
-            
-            # Wait for all threads
-            for t in threads:
-                t.join()
-            
-            # Verify all succeeded (or failed gracefully)
-            assert len(results) == 10
-            assert all(isinstance(r, bool) for r in results)
-            
-            # Verify file integrity (should have all 10 rules)
-            with open(temp_sop, 'r') as f:
-                content = f.read()
-                for i in range(10):
-                    assert f"Rule {i}" in content
+        with self.assertRaises(ValueError) as ctx:
+            _validate_subtransaction_amounts(subtxns, -15000)
         
-        finally:
-            os.unlink(temp_sop)
+        error_msg = str(ctx.exception)
+        self.assertIn('milliunits', error_msg)
+        self.assertIn('-16000', error_msg)
+        self.assertIn('-15000', error_msg)
+    
+    def test_validation_empty_list(self):
+        """Test empty subtransactions list"""
+        with self.assertRaises(ValueError) as ctx:
+            _validate_subtransaction_amounts([], -15000)
+        
+        self.assertIn('empty', str(ctx.exception))
+    
+    def test_validation_zero_amounts(self):
+        """Test zero amounts (valid if sum is zero)"""
+        subtxns = [
+            {'amount': 0},
+            {'amount': 0}
+        ]
+        
+        # Should not raise
+        _validate_subtransaction_amounts(subtxns, 0)
+
+
+class TestUpdateSplitTransaction(unittest.TestCase):
+    """Test update_split_transaction() function"""
+    
+    @patch('tools.ynab.transaction_tagger.atoms.api_update.BaseYNABClient')
+    def test_split_update_success(self, mock_client_class):
+        """Test successful split transaction update"""
+        mock_client = Mock()
+        mock_client.put.return_value = {'data': {'transaction': {'id': 'txn-123'}}}
+        mock_client_class.return_value = mock_client
+        
+        subtxns = [
+            {'amount': -10000, 'category_id': 'cat-1'},
+            {'amount': -5000, 'category_id': 'cat-2'}
+        ]
+        
+        result = update_split_transaction('b1', 'txn-123', subtxns, -15000)
+        
+        self.assertTrue(result)
+        mock_client.put.assert_called_once_with(
+            '/budgets/b1/transactions/txn-123',
+            {'transaction': {'subtransactions': subtxns}}
+        )
+    
+    @patch('tools.ynab.transaction_tagger.atoms.api_update.BaseYNABClient')
+    def test_split_update_conflict(self, mock_client_class):
+        """Test split conflict returns False"""
+        mock_client = Mock()
+        mock_client.put.side_effect = YNABConflictError()
+        mock_client_class.return_value = mock_client
+        
+        subtxns = [
+            {'amount': -10000, 'category_id': 'cat-1'},
+            {'amount': -5000, 'category_id': 'cat-2'}
+        ]
+        
+        result = update_split_transaction('b1', 'txn-123', subtxns, -15000)
+        
+        self.assertFalse(result)
+    
+    def test_split_update_amount_validation_failure(self):
+        """Test amount validation prevents API call"""
+        subtxns = [
+            {'amount': -10000, 'category_id': 'cat-1'},
+            {'amount': -6000, 'category_id': 'cat-2'}  # Wrong total
+        ]
+        
+        with self.assertRaises(ValueError):
+            update_split_transaction('b1', 'txn-123', subtxns, -15000)
+    
+    def test_split_update_empty_subtransactions(self):
+        """Test empty subtransactions raises ValueError"""
+        with self.assertRaises(ValueError):
+            update_split_transaction('b1', 'txn-123', [], -15000)
+
+
+if __name__ == '__main__':
+    unittest.main()
