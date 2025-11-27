@@ -1,8 +1,19 @@
-"""Unit tests for YNAB Transaction Tagger atoms"""
+"""
+Tests for YNAB Transaction Tagger Atoms (Layer 1).
+
+Tests pure functions that form the atomic building blocks of the system.
+Includes tests for SOP Updater and API Update atoms.
+"""
+
+import pytest
 import unittest
 from unittest.mock import Mock, patch, MagicMock
-import sys
+import tempfile
 import os
+import sys
+from pathlib import Path
+import threading
+import time
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -16,7 +27,15 @@ from tools.ynab.transaction_tagger.atoms.api_update import (
     update_split_transaction,
     _validate_subtransaction_amounts
 )
+from tools.ynab.transaction_tagger.atoms.sop_updater import (
+    append_rule_to_sop,
+    _inject_timestamp_if_missing
+)
 
+
+# ============================================================================
+# API Update Atom Tests
+# ============================================================================
 
 class TestBaseYNABClientPut(unittest.TestCase):
     """Test BaseYNABClient.put() method"""
@@ -232,6 +251,128 @@ class TestUpdateSplitTransaction(unittest.TestCase):
         """Test empty subtransactions raises ValueError"""
         with self.assertRaises(ValueError):
             update_split_transaction('b1', 'txn-123', [], -15000)
+
+
+# ============================================================================
+# SOP Updater Atom Tests
+# ============================================================================
+
+class TestSOPUpdater:
+    """Tests for SOP Updater atom."""
+    
+    def test_append_rule_success(self):
+        """Test successful rule append."""
+        # Create temp SOP file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
+            temp_sop = f.name
+            f.write("# Categorization Rules\n\n")
+        
+        try:
+            rule = """
+## Learned from User Corrections
+- **Payee**: Test Payee
+  **Category**: Test Category
+  **Date Learned**: 2025-11-27T12:00:00Z
+"""
+            result = append_rule_to_sop(rule, temp_sop)
+            
+            assert result is True
+            
+            # Verify content
+            with open(temp_sop, 'r') as f:
+                content = f.read()
+                assert '## Learned from User Corrections' in content
+                assert 'Test Payee' in content
+                
+        finally:
+            os.unlink(temp_sop)
+    
+    def test_append_rule_file_not_found(self):
+        """Test file not found returns False."""
+        result = append_rule_to_sop("test", "/nonexistent/file.md")
+        assert result is False
+    
+    def test_timestamp_injection(self):
+        """Test timestamp injection when missing."""
+        rule_without_timestamp = """
+## Core Patterns
+- **Payee**: Test
+  **Category**: Test Category
+"""
+        result = _inject_timestamp_if_missing(rule_without_timestamp)
+        assert '**Date Added**:' in result
+        assert 'Z' in result  # ISO 8601 format
+    
+    def test_timestamp_preservation(self):
+        """Test existing timestamp is preserved."""
+        rule_with_timestamp = """
+## Learned from User Corrections
+- **Payee**: Test
+  **Date Learned**: 2025-11-27T12:00:00Z
+"""
+        result = _inject_timestamp_if_missing(rule_with_timestamp)
+        assert result == rule_with_timestamp
+    
+    def test_concurrent_writes(self):
+        """Test thread-safe concurrent writes."""
+        # Create temp SOP file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
+            temp_sop = f.name
+            f.write("# Categorization Rules\n\n")
+        
+        try:
+            results = []
+            
+            def append_test_rule(n):
+                rule = f"""
+## Test Section {n}
+- **Payee**: Test {n}
+  **Category**: Cat {n}
+  **Date Added**: 2025-11-27T12:00:00Z
+"""
+                result = append_rule_to_sop(rule, temp_sop)
+                results.append(result)
+            
+            # Spawn 5 threads
+            threads = [threading.Thread(target=append_test_rule, args=(i,)) for i in range(5)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            
+            # All should succeed
+            assert all(results)
+            
+            # Verify all rules present
+            with open(temp_sop, 'r') as f:
+                content = f.read()
+                for i in range(5):
+                    assert f'Test {i}' in content
+                    
+        finally:
+            os.unlink(temp_sop)
+    
+    def test_blank_line_insertion(self):
+        """Test blank line inserted before appended content."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.md') as f:
+            temp_sop = f.name
+            f.write("# Categorization Rules\nExisting content")
+        
+        try:
+            rule = """
+## New Section
+- **Payee**: Test
+"""
+            append_rule_to_sop(rule, temp_sop)
+            
+            with open(temp_sop, 'r') as f:
+                content = f.read()
+                # Should have blank lines between existing content and new rule
+                assert '## New Section' in content
+                assert 'Existing content' in content
+                
+        finally:
+            os.unlink(temp_sop)
 
 
 if __name__ == '__main__':
