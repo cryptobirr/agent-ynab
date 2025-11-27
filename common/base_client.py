@@ -20,6 +20,11 @@ class YNABNotFoundError(YNABAPIError):
     pass
 
 
+class YNABConflictError(YNABAPIError):
+    """409 - Transaction conflict (outdated version)"""
+    pass
+
+
 class YNABRateLimitError(YNABAPIError):
     """429 - Rate limit exceeded"""
     def __init__(self, retry_after: int):
@@ -99,6 +104,52 @@ class BaseYNABClient:
                 raise YNABUnauthorizedError("Invalid YNAB API token")
             elif response.status_code == 404:
                 raise YNABNotFoundError(f"Resource not found: {endpoint}")
+            elif response.status_code == 429:
+                retry_after = int(response.headers.get('Retry-After', 60))
+                raise YNABRateLimitError(retry_after)
+            else:
+                raise YNABAPIError(
+                    f"YNAB API error {response.status_code}: {response.text}"
+                )
+        
+        except requests.RequestException as e:
+            raise YNABAPIError(f"Network error: {str(e)}")
+    
+    def put(self, endpoint: str, data: Dict) -> Dict:
+        """
+        Make authenticated PUT request to YNAB API.
+        
+        Args:
+            endpoint: API endpoint path (e.g., '/budgets/{id}/transactions/{id}')
+            data: JSON payload as dictionary
+            
+        Returns:
+            JSON response as dictionary
+            
+        Raises:
+            YNABUnauthorizedError: Invalid API token (401)
+            YNABNotFoundError: Resource not found (404)
+            YNABConflictError: Conflict - transaction outdated (409)
+            YNABRateLimitError: Rate limit exceeded (429)
+            YNABAPIError: Other API or network errors
+        """
+        headers = {
+            'Authorization': f'Bearer {self.api_token}',
+            'Content-Type': 'application/json'
+        }
+        url = f'{self.base_url}{endpoint}'
+        
+        try:
+            response = requests.put(url, headers=headers, json=data, timeout=10)
+            
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 401:
+                raise YNABUnauthorizedError("Invalid YNAB API token")
+            elif response.status_code == 404:
+                raise YNABNotFoundError(f"Resource not found: {endpoint}")
+            elif response.status_code == 409:
+                raise YNABConflictError("Transaction conflict - version outdated")
             elif response.status_code == 429:
                 retry_after = int(response.headers.get('Retry-After', 60))
                 raise YNABRateLimitError(retry_after)
