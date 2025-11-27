@@ -1,0 +1,118 @@
+{
+  "transactions_page1": {
+    "data": {
+      "transactions": [
+        {
+          "id": "txn-001",
+          "date": "2025-01-15",
+          "amount": -25000,
+          "memo": "Grocery store",
+          "cleared": "cleared",
+          "approved": true,
+          "account_id": "acct-001",
+          "payee_id": "payee-001",
+          "category_id": "cat-001",
+          "deleted": false
+        },
+        {
+          "id": "txn-002",
+          "date": "2025-01-16",
+          "amount": -15000,
+          "memo": "Gas station",
+          "cleared": "cleared",
+          "approved": true,
+          "account_id": "acct-001",
+          "payee_id": "payee-002",
+          "category_id": "cat-002",
+          "deleted": false
+        }
+      ],
+      "server_knowledge": 100
+    }
+  },
+  "transactions_page2": {
+    "data": {
+      "transactions": [
+        {
+          "id": "txn-003",
+          "date": "2025-01-17",
+          "amount": -50000,
+          "memo": "Restaurant",
+          "cleared": "cleared",
+          "approved": true,
+          "account_id": "acct-001",
+          "payee_id": "payee-003",
+          "category_id": "cat-003",
+          "deleted": false
+        }
+      ],
+      "server_knowledge": 100
+    }
+  },
+  "transactions_with_deleted": {
+    "data": {
+      "transactions": [
+        {
+          "id": "txn-004",
+          "deleted": false
+        },
+        {
+          "id": "txn-005",
+          "deleted": true
+        }
+      ],
+      "server_knowledge": 100
+    }
+  },
+  "categories": {
+    "data": {
+      "category_groups": [
+        {
+          "id": "grp-001",
+          "name": "Monthly Bills",
+          "hidden": false,
+          "deleted": false,
+          "categories": [
+            {
+              "id": "cat-001",
+              "category_group_id": "grp-001",
+              "name": "Rent/Mortgage",
+              "hidden": false,
+              "deleted": false
+            },
+            {
+              "id": "cat-002",
+              "category_group_id": "grp-001",
+              "name": "Electric",
+              "hidden": false,
+              "deleted": false
+            }
+          ]
+        },
+        {
+          "id": "grp-002",
+          "name": "Everyday Expenses",
+          "hidden": false,
+          "deleted": false,
+          "categories": [
+            {
+              "id": "cat-003",
+              "category_group_id": "grp-002",
+              "name": "Groceries",
+              "hidden": false,
+              "deleted": false
+            }
+          ]
+        }
+      ],
+      "server_knowledge": 50
+    }
+  },
+  "error_401": {
+    "error": {
+      "id": "401",
+      "name": "unauthorized",
+      "detail": "Unauthorized"
+    }
+  }
+}
