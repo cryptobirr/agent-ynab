@@ -57,24 +57,33 @@ async def load_and_tag():
     """
     try:
         logger.info("Starting load-and-tag workflow")
-        
-        # Import workflow orchestrator
+
+        # Import tagging workflow template
         # Note: Import here to avoid circular dependencies
-        try:
-            from tools.ynab.transaction_tagger.molecules.workflow_orchestrator import WorkflowOrchestrator
-        except ImportError:
-            logger.error("WorkflowOrchestrator not yet implemented")
+        from tools.ynab.transaction_tagger.templates.tagging_workflow import generate_recommendations
+
+        # Execute workflow
+        result = generate_recommendations(
+            budget_type='both',
+            uncategorized_only=True
+        )
+
+        if result['status'] == 'failed':
+            logger.error(f"Workflow failed: {result.get('errors')}")
             return jsonify({
                 'status': 'error',
-                'message': 'Workflow orchestrator not available (Story 4.3 pending)'
-            }), 501  # Not Implemented
-        
-        # Execute workflow
-        orchestrator = WorkflowOrchestrator()
-        result = await orchestrator.execute()
-        
-        logger.info(f"Workflow completed successfully: {len(result.get('transactions', []))} transactions")
-        
+                'message': 'Workflow execution failed',
+                'errors': result.get('errors', [])
+            }), 500
+
+        # Count total transactions
+        total_txns = sum(
+            len(budget_data.get('transactions', []))
+            for budget_data in result.get('budgets', {}).values()
+        )
+
+        logger.info(f"Workflow completed successfully: {total_txns} transactions")
+
         return jsonify({
             'status': 'success',
             'data': result
