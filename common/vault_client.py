@@ -30,3 +30,30 @@ class VaultClient:
         headers = {"X-Vault-Token": self.token}
         resp = requests.post(f"{self.addr}/v1/{path}", headers=headers, json=data)
         return resp.status_code in [200, 204]
+
+    def get_postgres_credentials(self, db_name):
+        """
+        Get PostgreSQL credentials from Vault.
+
+        Args:
+            db_name: Database name (e.g., 'birrbot_test', 'ynab_db')
+
+        Returns:
+            Dict with host, port, database, username, password
+
+        Raises:
+            ValueError: If credentials not found or incomplete
+        """
+        path = f"secret/postgres/{db_name}"
+        creds = self.kv_get(path)
+
+        if not creds:
+            raise ValueError(f"No credentials found in Vault at {path}")
+
+        required_keys = ['host', 'port', 'database', 'username', 'password']
+        missing_keys = [k for k in required_keys if k not in creds]
+
+        if missing_keys:
+            raise ValueError(f"Incomplete credentials at {path}. Missing: {missing_keys}")
+
+        return creds
