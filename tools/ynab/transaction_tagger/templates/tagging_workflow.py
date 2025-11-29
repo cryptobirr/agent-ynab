@@ -37,6 +37,12 @@ from tools.ynab.transaction_tagger.atoms.api_fetch import (
 from tools.ynab.transaction_tagger.atoms.sop_loader import (
     load_categorization_rules
 )
+from tools.ynab.transaction_tagger.atoms.db_init import initialize_database
+from tools.ynab.transaction_tagger.atoms.db_check_init import (
+    check_init_budget_loaded,
+    mark_init_budget_loaded
+)
+from tools.ynab.transaction_tagger.atoms.db_upsert import upsert_transaction
 
 # Import molecules
 from tools.ynab.transaction_tagger.molecules.pattern_analyzer import (
@@ -57,61 +63,48 @@ logger = logging.getLogger(__name__)
 TIER_1_CONFIDENCE_THRESHOLD = 0.95  # SOP rules
 TIER_2_CONFIDENCE_THRESHOLD = 0.80  # Historical patterns
 
+# Two-Budget Architecture (PRD v3.5)
+INIT_BUDGET_ID = "75f63aa3-9f8f-4dcc-9350-d22535494657"  # One-time historical import
+TARGET_BUDGET_ID = "eaf7c5cb-e008-4b62-9733-e7d0ca96cbf1"  # Ongoing operations
+
 
 def _load_budget_config(budget_type: str) -> Dict[str, Any]:
     """
-    Load budget configuration from Vault.
-    
+    Load budget configuration using TARGET_BUDGET_ID (two-budget architecture).
+
     Args:
         budget_type: 'personal' | 'business' | 'both'
-    
+
     Returns:
-        Dict with budget configurations:
+        Dict with budget configurations using TARGET_BUDGET_ID:
         {
-            'personal': {'budget_id': 'uuid', 'budget_name': 'Personal Budget'},
-            'business': {'budget_id': 'uuid', 'budget_name': 'Business Budget'}
+            'personal': {'budget_id': TARGET_BUDGET_ID, 'budget_name': 'Personal Budget'}
         }
-    
-    Raises:
-        ValueError: If budget_type invalid or budget IDs missing
+
+    Note:
+        Uses TARGET_BUDGET_ID for ongoing operations.
+        INIT_BUDGET_ID is only used once to populate historical data.
     """
     # Validate budget_type
     if budget_type not in ['personal', 'business', 'both']:
         raise ValueError(f"Invalid budget_type: {budget_type}. Must be 'personal', 'business', or 'both'")
-    
-    # Load from Vault
-    vault = VaultClient()
-    
-    if not vault.is_connected():
-        logger.warning("Vault unavailable, falling back to .env")
-        return _load_budget_from_env(budget_type)
-    
-    creds = vault.kv_get('secret/ynab/credentials')
-    if not creds:
-        logger.error("No YNAB credentials found in Vault")
-        raise ValueError("No YNAB credentials found in Vault at secret/ynab/credentials")
-    
-    # Build budget configs
+
+    # For two-budget architecture, always use TARGET_BUDGET_ID for ongoing operations
     budgets = {}
-    
+
     if budget_type in ['personal', 'both']:
-        personal_id = creds.get('personal_budget_id')
-        if not personal_id:
-            raise ValueError("Missing personal_budget_id in Vault")
         budgets['personal'] = {
-            'budget_id': personal_id,
+            'budget_id': TARGET_BUDGET_ID,
             'budget_name': 'Personal Budget'
         }
-    
-    if budget_type in ['business', 'both']:
-        business_id = creds.get('business_budget_id')
-        if not business_id:
-            raise ValueError("Missing business_budget_id in Vault")
-        budgets['business'] = {
-            'budget_id': business_id,
-            'budget_name': 'Business Budget'
-        }
-    
+
+    # Business budget not used in current PRD implementation
+    # if budget_type in ['business', 'both']:
+    #     budgets['business'] = {
+    #         'budget_id': 'future-business-budget-id',
+    #         'budget_name': 'Business Budget'
+    #     }
+
     logger.info(f"Loaded budget config for: {', '.join(budgets.keys())}")
     return budgets
 
@@ -160,31 +153,58 @@ def _load_budget_from_env(budget_type: str) -> Dict[str, Any]:
 def _check_sop_rules(txn: Dict[str, Any], rules: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Check transaction against SOP rules (Tier 1).
-    
+
     Checks core_patterns and user_corrections sections.
     Returns first match with confidence ≥ 0.95.
-    
+
+    Special handling for transfers: YNAB transfers between accounts should NOT
+    be categorized (they remain without a category per YNAB standard).
+
     Args:
         txn: Transaction dict with 'payee_name'
         rules: SOP rules from load_categorization_rules()
-    
+
     Returns:
         Match dict or None:
         {
             'category_id': None,  # ID not available from SOP
-            'category_name': str,
+            'category_name': str or 'SKIP_TRANSFER',
             'confidence': 1.0,    # High confidence for SOP rules
             'reasoning': str
         }
     """
-    payee_name = txn.get('payee_name', '').lower()
-    
+    payee_name = txn.get('payee_name', '')
+
     if not payee_name:
         return None
-    
-    # Check user corrections first (highest priority)
+
+    # PRIORITY 1: Check for YNAB transfer pattern (highest priority)
+    # Pattern: "Transfer : Account Name" or "Transfer: Account Name"
+    import re
+    if re.match(r'^Transfer\s*:', payee_name, re.IGNORECASE):
+        return {
+            'category_id': None,
+            'category_name': 'SKIP_TRANSFER',  # Special marker to skip categorization
+            'confidence': 1.0,
+            'reasoning': 'YNAB transfer between accounts - transfers are not categorized per YNAB standard'
+        }
+
+    # PRIORITY 2: Check for inflows (positive amounts) - should be "Ready to Assign"
+    # YNAB standard: All income goes to "Ready to Assign" unless it's a transfer
+    amount = txn.get('amount', 0)
+    if amount > 0:
+        return {
+            'category_id': None,
+            'category_name': 'INFLOW_READY_TO_ASSIGN',  # Special marker for inflows
+            'confidence': 1.0,
+            'reasoning': 'YNAB standard: Inflows are categorized as "Ready to Assign"'
+        }
+
+    payee_name_lower = payee_name.lower()
+
+    # Check user corrections first (highest priority after transfers)
     for correction in rules.get('user_corrections', []):
-        if correction.get('payee', '').lower() == payee_name:
+        if correction.get('payee', '').lower() == payee_name_lower:
             return {
                 'category_id': None,  # Will need category lookup
                 'category_name': correction.get('correct_category'),
@@ -362,6 +382,53 @@ def generate_recommendations(
             'timestamp': str  # ISO 8601
         }
     """
+    # Step 1: Initialize database (idempotent)
+    logger.info("Initializing database...")
+    db_result = initialize_database()
+    if db_result['status'] == 'error':
+        return {
+            'status': 'failed',
+            'errors': [{
+                'type': 'database_init_error',
+                'error': db_result['error']
+            }],
+            'budgets': {},
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }
+    logger.info(f"Database initialization: {db_result['status']}")
+
+    # Step 2: Check if historical data has been loaded from INIT_BUDGET
+    if not check_init_budget_loaded():
+        logger.info("INIT_BUDGET data not loaded. Loading historical transactions...")
+        try:
+            # Fetch ALL transactions from INIT_BUDGET (historical data for learning)
+            init_transactions = fetch_transactions(INIT_BUDGET_ID)
+            logger.info(f"Fetched {len(init_transactions)} transactions from INIT_BUDGET")
+
+            # Upsert all into database (with existing categories for learning)
+            for txn in init_transactions:
+                # Add budget_id to transaction data (required by upsert_transaction)
+                txn['budget_id'] = INIT_BUDGET_ID
+                upsert_transaction(txn)
+
+            # Mark as loaded
+            mark_init_budget_loaded(INIT_BUDGET_ID, len(init_transactions))
+            logger.info(f"Historical data loaded successfully: {len(init_transactions)} transactions")
+
+        except YNABAPIError as e:
+            logger.error(f"Failed to load INIT_BUDGET data: {e}")
+            return {
+                'status': 'failed',
+                'errors': [{
+                    'type': 'init_budget_load_error',
+                    'error': f"Failed to load historical data from INIT_BUDGET: {str(e)}"
+                }],
+                'budgets': {},
+                'timestamp': datetime.utcnow().isoformat() + 'Z'
+            }
+    else:
+        logger.info("INIT_BUDGET data already loaded, skipping historical import")
+
     # Validate budget_type
     if budget_type not in ['personal', 'business', 'both']:
         return {
@@ -416,8 +483,14 @@ def generate_recommendations(
             transactions = fetch_transactions(budget_id, since_date=start_date)
             
             # Filter by uncategorized if requested
+            # Definition: unapproved OR uncleared OR no category
             if uncategorized_only:
-                transactions = [t for t in transactions if not t.get('category_id')]
+                transactions = [
+                    t for t in transactions
+                    if not t.get('approved') or
+                       t.get('cleared') == 'uncleared' or
+                       not t.get('category_id')
+                ]
             
             # Filter by date range
             if end_date:
@@ -432,9 +505,8 @@ def generate_recommendations(
             
             # Fetch category groups
             try:
-                categories = fetch_categories(budget_id)
-                # TODO: Group categories by category_group_id
-                category_groups = []  # Placeholder
+                from tools.ynab.transaction_tagger.atoms.api_fetch import fetch_category_groups
+                category_groups = fetch_category_groups(budget_id)
             except YNABAPIError as e:
                 logger.warning(f"Failed to fetch categories for {budget_name}: {e}")
                 category_groups = []

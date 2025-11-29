@@ -261,43 +261,49 @@ COMMENT ON COLUMN agent_metadata.value IS 'JSONB allows flexible schema evolutio
 CREATE OR REPLACE FUNCTION find_historical_category(
     p_payee_name TEXT,
     p_amount BIGINT DEFAULT NULL,
-    p_min_confidence REAL DEFAULT 0.80
-) 
+    p_min_confidence REAL DEFAULT 0.0
+)
 RETURNS TABLE (
     category_id TEXT,
     category_name TEXT,
     confidence REAL,
     match_count BIGINT
-) 
+)
 LANGUAGE SQL
 STABLE
 AS $$
-    -- Find exact payee matches, calculate confidence from historical data
-    WITH historical_matches AS (
-        SELECT 
+    -- Find the top category for this payee based on historical patterns
+    -- EXCLUDE "Split" transactions as they represent multiple categories
+    -- Returns top match regardless of confidence percentage
+    WITH payee_category_counts AS (
+        SELECT
             yt.category_id,
             yt.category_name,
-            COUNT(*) as match_count,
-            COUNT(*) * 1.0 / NULLIF(
-                (SELECT COUNT(*) FROM ynab_transactions WHERE payee_name = p_payee_name),
-                0
-            ) as confidence_score
+            COUNT(*) as category_count
         FROM ynab_transactions yt
-        WHERE 
+        WHERE
             yt.payee_name = p_payee_name
             AND yt.category_id IS NOT NULL
-            AND (p_amount IS NULL OR ABS(yt.amount - p_amount) < 100)  -- Allow $0.10 variance
+            AND yt.category_name IS NOT NULL
+            AND yt.category_name <> 'Split'  -- EXCLUDE Split transactions
         GROUP BY yt.category_id, yt.category_name
-        HAVING COUNT(*) >= 3  -- Minimum 3 historical transactions
+    ),
+    total_count AS (
+        SELECT COUNT(*) as total
+        FROM ynab_transactions
+        WHERE payee_name = p_payee_name
+            AND category_id IS NOT NULL
+            AND category_name <> 'Split'  -- EXCLUDE Split from total count
     )
-    SELECT 
-        hm.category_id,
-        hm.category_name,
-        hm.confidence_score::REAL,
-        hm.match_count
-    FROM historical_matches hm
-    WHERE hm.confidence_score >= p_min_confidence
-    ORDER BY hm.confidence_score DESC, hm.match_count DESC
+    SELECT
+        pcc.category_id,
+        pcc.category_name,
+        (pcc.category_count * 1.0 / NULLIF(tc.total, 0))::REAL as confidence,
+        pcc.category_count as match_count
+    FROM payee_category_counts pcc
+    CROSS JOIN total_count tc
+    WHERE (pcc.category_count * 1.0 / NULLIF(tc.total, 0)) >= p_min_confidence
+    ORDER BY pcc.category_count DESC
     LIMIT 1;
 $$;
 

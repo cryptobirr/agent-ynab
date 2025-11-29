@@ -52,26 +52,43 @@ def initialize_database() -> Dict[str, Any]:
         
         # Step 2: Check if already initialized
         logger.info("Checking if database already initialized...")
+        already_initialized = False
         try:
             result = db.query(
                 "SELECT value FROM agent_metadata WHERE key = 'database_initialized'"
             )
-            
+
             if result and len(result) > 0:
                 value = result[0]['value']
                 if isinstance(value, dict) and value.get('initialized'):
-                    # Already initialized
-                    logger.info("Database already initialized. Skipping schema creation.")
-                    return {
-                        'status': 'already_initialized',
-                        'version': value.get('version', 'unknown'),
-                        'tables_created': [],
-                        'timestamp': value.get('timestamp', 'unknown'),
-                        'error': None
-                    }
+                    # Already initialized - still update functions
+                    already_initialized = True
+                    logger.info("Database already initialized. Updating functions only.")
         except DatabaseExecutionError as e:
             # Table might not exist yet - this is expected on first run
             logger.info("agent_metadata table not found. Proceeding with initialization.")
+
+        # If already initialized, just update the find_historical_category function
+        if already_initialized:
+            logger.info("Updating find_historical_category function...")
+            sql_file = Path(__file__).parent.parent / 'sql' / 'init_persistent_db.sql'
+            sql_content = sql_file.read_text()
+
+            # Extract just the function
+            start = sql_content.find("CREATE OR REPLACE FUNCTION find_historical_category(")
+            end = sql_content.find("$$;", start) + 3
+            function_sql = sql_content[start:end]
+
+            db.execute(function_sql)
+            logger.info("Function updated successfully")
+
+            return {
+                'status': 'already_initialized',
+                'version': value.get('version', 'unknown'),
+                'tables_created': [],
+                'timestamp': value.get('timestamp', 'unknown'),
+                'error': None
+            }
         
         # Step 3: Load SQL schema file
         logger.info("Loading SQL schema file...")

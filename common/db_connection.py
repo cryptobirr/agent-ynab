@@ -166,33 +166,42 @@ class DatabaseConnection:
                 self._connection.rollback()
             raise DatabaseExecutionError(f"SQL execution failed: {e}")
     
-    def query(self, sql: str) -> List[Dict[str, Any]]:
+    def query(self, sql: str, params: tuple = None) -> List[Dict[str, Any]]:
         """
         Execute SQL query and return results as list of dictionaries.
-        
+
         Args:
-            sql: SQL SELECT query
-            
+            sql: SQL SELECT query (can use %s placeholders)
+            params: Optional tuple of parameters for placeholders
+
         Returns:
             List of dictionaries (column_name -> value)
-            
+
         Raises:
             DatabaseExecutionError: If query execution fails
-            
+
         Example:
             >>> db = DatabaseConnection()
             >>> results = db.query("SELECT id, name FROM users WHERE active = true")
             >>> results[0]['name']
             'John Doe'
+            >>> results = db.query("SELECT * FROM users WHERE id = %s", ('123',))
+            >>> results[0]['id']
+            '123'
         """
         try:
             conn = self.get_connection()
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(sql)
+                cursor.execute(sql, params)
                 results = cursor.fetchall()
+                # Commit if this is an INSERT/UPDATE/DELETE with RETURNING
+                if sql.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE')):
+                    conn.commit()
                 # Convert RealDictRow to regular dict
                 return [dict(row) for row in results]
         except Error as e:
+            if self._connection:
+                self._connection.rollback()
             raise DatabaseExecutionError(f"Query execution failed: {e}")
     
     @property

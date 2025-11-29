@@ -67,39 +67,91 @@ def fetch_transactions(budget_id: str, since_date: Optional[str] = None) -> List
 def fetch_categories(budget_id: str) -> List[Dict]:
     """
     Fetch all categories from YNAB API for a given budget.
-    
+
     Returns flattened list of categories (not grouped).
     Filters out hidden and deleted categories.
-    
+
     Args:
         budget_id: YNAB budget identifier
-    
+
     Returns:
         List of category dictionaries (non-hidden, non-deleted only)
-    
+
     Raises:
         YNABAPIError: On API errors (401, 404, 429, network errors)
-    
+
     Example:
         >>> categories = fetch_categories('budget-123')
         >>> categories[0]['name']
         'Groceries'
     """
     client = BaseYNABClient()
-    
+
     # Fetch categories
     response = client.get(f'/budgets/{budget_id}/categories')
     data = response.get('data', {})
     category_groups = data.get('category_groups', [])
-    
+
     # Flatten and filter categories
     categories = []
     for group in category_groups:
         if group.get('hidden') or group.get('deleted'):
             continue
-        
+
         for category in group.get('categories', []):
             if not category.get('hidden') and not category.get('deleted'):
                 categories.append(category)
-    
+
     return categories
+
+
+def fetch_category_groups(budget_id: str) -> List[Dict]:
+    """
+    Fetch category groups with their nested categories from YNAB API.
+
+    Returns grouped structure preserving the hierarchy.
+    Filters out hidden and deleted groups and categories.
+
+    Args:
+        budget_id: YNAB budget identifier
+
+    Returns:
+        List of category group dictionaries with nested categories
+
+    Raises:
+        YNABAPIError: On API errors (401, 404, 429, network errors)
+
+    Example:
+        >>> groups = fetch_category_groups('budget-123')
+        >>> groups[0]['name']
+        'Household'
+        >>> groups[0]['categories'][0]['name']
+        'Groceries'
+    """
+    client = BaseYNABClient()
+
+    # Fetch categories
+    response = client.get(f'/budgets/{budget_id}/categories')
+    data = response.get('data', {})
+    category_groups = data.get('category_groups', [])
+
+    # Filter groups and categories
+    result = []
+    for group in category_groups:
+        if group.get('hidden') or group.get('deleted'):
+            continue
+
+        # Filter categories within the group
+        filtered_categories = [
+            cat for cat in group.get('categories', [])
+            if not cat.get('hidden') and not cat.get('deleted')
+        ]
+
+        if filtered_categories:  # Only include groups that have visible categories
+            result.append({
+                'id': group.get('id'),
+                'name': group.get('name'),
+                'categories': filtered_categories
+            })
+
+    return result

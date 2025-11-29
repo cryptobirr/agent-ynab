@@ -62,9 +62,9 @@ async def load_and_tag():
         # Note: Import here to avoid circular dependencies
         from tools.ynab.transaction_tagger.templates.tagging_workflow import generate_recommendations
 
-        # Execute workflow
+        # Execute workflow - only load personal budget
         result = generate_recommendations(
-            budget_type='both',
+            budget_type='personal',
             uncategorized_only=True
         )
 

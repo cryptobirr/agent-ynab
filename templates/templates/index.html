@@ -102,6 +102,397 @@
             margin-left: auto;
         }
 
+        /* Account Tabs */
+        .account-tabs {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid #ecf0f1;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #7f8c8d;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .tab-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Category Selector Modal */
+        .category-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+        }
+
+        .category-modal {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            max-height: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-modal-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px;
+        }
+
+        .category-modal-selected {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .category-modal-current {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-modal-current .checkmark {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .category-search-container {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+
+        .category-search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .category-search-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .category-modal-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .category-action-button {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-action-button:hover {
+            background-color: #f8f9fa;
+            border-color: #3498db;
+        }
+
+        .category-modal-body {
+            overflow-y: auto;
+            max-height: 400px;
+            flex: 1;
+        }
+
+        .category-group {
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .category-group-header {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            background-color: #f8f9fa;
+        }
+
+        .category-item {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .category-item:hover {
+            background-color: #e3f2fd;
+        }
+
+        .category-item .checkmark {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        /* Split Transaction Modal */
+        .split-modal {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .split-modal-header {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .split-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .split-total {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .split-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .split-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1.5fr 0.8fr 0.8fr;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .split-payee-select,
+        .split-category-select,
+        .split-memo-input,
+        .split-outflow-input,
+        .split-inflow-input {
+            padding: 8px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .add-split-button {
+            margin-top: 12px;
+            padding: 8px 16px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            background-color: white;
+            color: #3498db;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-split-button:hover {
+            background-color: #e3f2fd;
+        }
+
+        .split-modal-footer {
+            padding: 16px;
+            border-top: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+
+        .split-remaining {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .split-modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .split-cancel-button,
+        .split-save-button {
+            padding: 10px 20px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .split-cancel-button {
+            background-color: white;
+            color: #666;
+        }
+
+        .split-cancel-button:hover {
+            background-color: #f8f9fa;
+        }
+
+        .split-save-button {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .split-save-button:hover {
+            background-color: #2980b9;
+        }
+
+        .category-button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .category-button:hover {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+
+        .category-button.uncategorized {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .category-button.transfer {
+            background-color: #f0f0f0;
+            border-color: #bbb;
+            color: #666;
+            cursor: not-allowed;
+            font-style: italic;
+        }
+
+        .category-button.transfer:hover {
+            background-color: #f0f0f0;
+            border-color: #bbb;
+        }
+
+        .category-button.inflow {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+
+        .category-button.inflow:hover {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+
+        /* AI Suggestion Badges */
+        .ai-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .ai-badge.sop {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .ai-badge.historical {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .ai-badge.research {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .confidence-indicator {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 10px;
+            color: #7f8c8d;
+        }
+
+        .tab-button.active .tab-badge {
+            background-color: #3498db;
+        }
+
         .transaction-grid {
             background-color: #fff;
             border-radius: 8px;
@@ -159,6 +550,16 @@
 
         tr.selected {
             background-color: #e3f2fd;
+        }
+
+        .memo {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-style: italic;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .amount {
@@ -287,6 +688,12 @@
             </div>
         </div>
 
+        <div class="account-tabs" id="accountTabs" style="display: none;">
+            <div class="tabs-header" id="tabsHeader">
+                <!-- Tabs will be dynamically generated here -->
+            </div>
+        </div>
+
         <div class="transaction-grid">
             <table>
                 <thead>
@@ -294,13 +701,14 @@
                         <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                         <th class="sortable" onclick="sortBy('date')">Date</th>
                         <th class="sortable" onclick="sortBy('payee')">Payee</th>
+                        <th>Memo</th>
                         <th class="sortable" onclick="sortBy('category')">Category</th>
                         <th class="sortable" onclick="sortBy('amount')">Amount</th>
                     </tr>
                 </thead>
                 <tbody id="transactionTableBody">
                     <tr>
-                        <td colspan="5" class="loading">Click "Load Transactions" to begin</td>
+                        <td colspan="6" class="loading">Click "Load Transactions" to begin</td>
                     </tr>
                 </tbody>
             </table>
@@ -313,6 +721,10 @@
         let filteredTransactions = [];
         let categories = [];
         let currentSort = null;
+        let accounts = [];
+        let currentAccount = 'all';
+        let categoryGroups = [];
+        let currentModalTransactionIndex = null;
 
         // Show message to user
         function showMessage(text, type = 'info') {
@@ -335,11 +747,41 @@
                 if (result.status === 'error') {
                     throw new Error(result.message);
                 }
-                
-                transactions = result.data.transactions || [];
-                categories = result.data.categories || [];
-                
+
+                // Extract transactions from all budgets
+                transactions = [];
+                categories = [];
+                const budgets = result.data.budgets || {};
+
+                for (const budgetKey in budgets) {
+                    const budget = budgets[budgetKey];
+                    if (budget.transactions) {
+                        transactions.push(...budget.transactions);
+                    }
+                    if (budget.category_groups) {
+                        categoryGroups.push(...budget.category_groups);
+                    }
+                }
+
+                // Extract unique accounts from transactions
+                const accountMap = new Map();
+                transactions.forEach(txn => {
+                    if (txn.account_id && txn.account_name) {
+                        accountMap.set(txn.account_id, txn.account_name);
+                    }
+                });
+                accounts = Array.from(accountMap, ([id, name]) => ({ id, name }));
+
+                // Create account tabs if there are multiple accounts
+                if (accounts.length > 1) {
+                    createAccountTabs();
+                    document.getElementById('accountTabs').style.display = 'block';
+                } else {
+                    document.getElementById('accountTabs').style.display = 'none';
+                }
+
                 filteredTransactions = [...transactions];
+                applyAccountFilter();
                 renderTransactions();
                 updateStats();
                 showMessage(`Loaded ${transactions.length} transactions`, 'success');
@@ -353,6 +795,47 @@
             }
         }
 
+        // Create account tabs dynamically
+        function createAccountTabs() {
+            const tabsHeader = document.getElementById('tabsHeader');
+            tabsHeader.innerHTML = '';
+
+            // Add "All Accounts" tab
+            const allCount = transactions.length;
+            const allTab = document.createElement('button');
+            allTab.className = 'tab-button' + (currentAccount === 'all' ? ' active' : '');
+            allTab.innerHTML = `All Accounts<span class="tab-badge">${allCount}</span>`;
+            allTab.onclick = () => switchAccount('all');
+            tabsHeader.appendChild(allTab);
+
+            // Add tab for each account
+            accounts.forEach(account => {
+                const count = transactions.filter(t => t.account_id === account.id).length;
+                const tab = document.createElement('button');
+                tab.className = 'tab-button' + (currentAccount === account.id ? ' active' : '');
+                tab.innerHTML = `${escapeHtml(account.name)}<span class="tab-badge">${count}</span>`;
+                tab.onclick = () => switchAccount(account.id);
+                tabsHeader.appendChild(tab);
+            });
+        }
+
+        // Switch to a different account tab
+        function switchAccount(accountId) {
+            currentAccount = accountId;
+            createAccountTabs();  // Refresh tabs to update active state
+            applyAccountFilter();
+            applyFilters();
+        }
+
+        // Filter transactions by current account
+        function applyAccountFilter() {
+            if (currentAccount === 'all') {
+                filteredTransactions = [...transactions];
+            } else {
+                filteredTransactions = transactions.filter(t => t.account_id === currentAccount);
+            }
+        }
+
         // Render transactions to table
         function renderTransactions() {
             const tbody = document.getElementById('transactionTableBody');
@@ -362,30 +845,342 @@
                 return;
             }
             
-            tbody.innerHTML = filteredTransactions.map((txn, idx) => `
-                <tr class="${txn.selected ? 'selected' : ''}" data-index="${idx}">
-                    <td><input type="checkbox" ${txn.selected ? 'checked' : ''} onchange="toggleTransaction(${idx})"></td>
-                    <td>${formatDate(txn.date)}</td>
-                    <td>${escapeHtml(txn.payee)}</td>
-                    <td>
-                        <select class="category-selector ${!txn.category_id ? 'uncategorized' : ''}" 
-                                onchange="updateCategory(${idx}, this.value)">
-                            <option value="">-- Select Category --</option>
-                            ${categories.map(cat => `
-                                <option value="${cat.id}" ${txn.category_id === cat.id ? 'selected' : ''}>
-                                    ${escapeHtml(cat.name)}
-                                </option>
-                            `).join('')}
-                        </select>
-                    </td>
-                    <td class="amount ${txn.amount >= 0 ? 'positive' : 'negative'}">
-                        ${formatCurrency(txn.amount)}
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = filteredTransactions.map((txn, idx) => {
+                // Check if this is a transfer (YNAB standard behavior)
+                const isTransfer = txn.category_name === 'SKIP_TRANSFER';
+                // Check if this is an inflow (YNAB standard: inflows go to "Ready to Assign")
+                const isInflow = txn.category_name === 'INFLOW_READY_TO_ASSIGN';
+
+                let categoryText = '-- Select Category --';
+                if (isTransfer) {
+                    categoryText = 'Category not needed';
+                } else if (isInflow) {
+                    categoryText = 'Inflow: Ready to Assign';
+                } else if (txn.category_group_name && txn.category_name) {
+                    categoryText = `${txn.category_group_name} : ${txn.category_name}`;
+                } else if (txn.category_name) {
+                    categoryText = txn.category_name;
+                }
+
+                // Build AI suggestion badges (not shown for transfers or inflows)
+                let aiBadges = '';
+                if (!isTransfer && !isInflow && txn.tier) {
+                    const tierLabels = {
+                        'sop': 'SOP',
+                        'historical': 'AI',
+                        'research': 'Manual'
+                    };
+                    aiBadges += `<span class="ai-badge ${txn.tier}">${tierLabels[txn.tier] || txn.tier}</span>`;
+
+                    if (txn.confidence !== undefined) {
+                        const confidencePct = Math.round(txn.confidence * 100);
+                        aiBadges += `<span class="confidence-indicator">${confidencePct}%</span>`;
+                    }
+                }
+
+                return `
+                    <tr class="${txn.selected ? 'selected' : ''}" data-index="${idx}" title="${txn.reasoning || ''}">
+                        <td><input type="checkbox" ${txn.selected ? 'checked' : ''} onchange="toggleTransaction(${idx})"></td>
+                        <td>${formatDate(txn.date)}</td>
+                        <td>${escapeHtml(txn.payee_name)}</td>
+                        <td class="memo">${escapeHtml(txn.memo || '')}</td>
+                        <td>
+                            <button class="category-button ${isTransfer ? 'transfer' : isInflow ? 'inflow' : !txn.category_id ? 'uncategorized' : ''}"
+                                    ${isTransfer || isInflow ? 'disabled' : `onclick="openCategoryModal(${idx})"`}>
+                                ${escapeHtml(categoryText)}${aiBadges}
+                            </button>
+                        </td>
+                        <td class="amount ${txn.amount >= 0 ? 'positive' : 'negative'}">
+                            ${formatCurrency(txn.amount)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        // Update transaction category
+        // Open category selector modal
+        function openCategoryModal(index) {
+            currentModalTransactionIndex = index;
+            const txn = filteredTransactions[index];
+
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'category-modal-overlay';
+            overlay.id = 'categoryModalOverlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) closeCategoryModal();
+            };
+
+            // Get current category display text
+            let currentCategoryText = 'Select a category...';
+            if (txn.category_group_name && txn.category_name) {
+                currentCategoryText = `${txn.category_group_name} : ${txn.category_name}`;
+            } else if (txn.category_name) {
+                currentCategoryText = txn.category_name;
+            }
+
+            // Build modal HTML
+            overlay.innerHTML = `
+                <div class="category-modal" onclick="event.stopPropagation()">
+                    <div class="category-modal-header">
+                        <div class="category-modal-selected">Selected</div>
+                        <div class="category-modal-current">
+                            <span class="checkmark">✓</span>
+                            <span>${escapeHtml(currentCategoryText)}</span>
+                        </div>
+                    </div>
+                    <div class="category-search-container">
+                        <input
+                            type="text"
+                            id="categorySearchInput"
+                            class="category-search-input"
+                            placeholder="Search categories..."
+                            oninput="filterCategories(this.value)"
+                        />
+                    </div>
+                    <div class="category-modal-actions">
+                        <button class="category-action-button" onclick="event.stopPropagation(); openPaymentTransferModal(${index})">
+                            Payment/Transfer
+                        </button>
+                        <button class="category-action-button" onclick="event.stopPropagation(); openSplitModal(${index})">
+                            Split
+                        </button>
+                    </div>
+                    <div class="category-modal-body" id="categoryModalBody">
+                        ${categoryGroups.map(group => `
+                            <div class="category-group" data-group-name="${escapeHtml(group.name)}">
+                                <div class="category-group-header">${escapeHtml(group.name)}</div>
+                                ${group.categories.map(cat => `
+                                    <button class="category-item" data-category-name="${escapeHtml(cat.name)}" onclick="selectCategory('${cat.id}', '${escapeHtml(cat.name)}', '${escapeHtml(group.name)}')">
+                                        <span>${escapeHtml(cat.name)}</span>
+                                        ${txn.category_id === cat.id ? '<span class="checkmark">✓</span>' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Focus the search input
+            setTimeout(() => {
+                document.getElementById('categorySearchInput')?.focus();
+            }, 100);
+        }
+
+        // Close category modal
+        function closeCategoryModal() {
+            const overlay = document.getElementById('categoryModalOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+            currentModalTransactionIndex = null;
+        }
+
+        // Filter categories based on search term
+        function filterCategories(searchTerm) {
+            const term = searchTerm.toLowerCase().trim();
+            const categoryGroups = document.querySelectorAll('.category-group');
+
+            categoryGroups.forEach(group => {
+                const groupName = group.getAttribute('data-group-name').toLowerCase();
+                const categoryItems = group.querySelectorAll('.category-item');
+                let hasVisibleCategory = false;
+
+                categoryItems.forEach(item => {
+                    const categoryName = item.getAttribute('data-category-name').toLowerCase();
+                    const matches = categoryName.includes(term) || groupName.includes(term);
+
+                    item.style.display = matches ? 'flex' : 'none';
+                    if (matches) hasVisibleCategory = true;
+                });
+
+                // Hide group if no categories match
+                group.style.display = hasVisibleCategory ? 'block' : 'none';
+            });
+        }
+
+        // Select a category from modal
+        function selectCategory(categoryId, categoryName, categoryGroupName) {
+            if (currentModalTransactionIndex !== null) {
+                filteredTransactions[currentModalTransactionIndex].category_id = categoryId;
+                filteredTransactions[currentModalTransactionIndex].category_name = categoryName;
+                filteredTransactions[currentModalTransactionIndex].category_group_name = categoryGroupName;
+                renderTransactions();
+                updateStats();
+            }
+            closeCategoryModal();
+        }
+
+        // Open Payment/Transfer modal
+        function openPaymentTransferModal(index) {
+            closeCategoryModal();
+            const txn = filteredTransactions[index];
+            const isInflow = txn.amount > 0;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'category-modal-overlay';
+            overlay.id = 'paymentTransferModalOverlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) closePaymentTransferModal();
+            };
+
+            const title = isInflow ? 'Payment from' : 'Transfer to';
+
+            overlay.innerHTML = `
+                <div class="category-modal" onclick="event.stopPropagation()">
+                    <div class="category-modal-header">
+                        <div class="category-modal-selected">${title}</div>
+                    </div>
+                    <div class="category-modal-body" id="paymentTransferModalBody">
+                        ${accounts.map(account => `
+                            <button class="category-item" onclick="event.stopPropagation(); selectPaymentTransfer('${account.id}', '${escapeHtml(account.name)}', ${index})">
+                                <span>${escapeHtml(account.name)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+        }
+
+        // Close Payment/Transfer modal
+        function closePaymentTransferModal() {
+            const overlay = document.getElementById('paymentTransferModalOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Select Payment/Transfer account
+        function selectPaymentTransfer(accountId, accountName, index) {
+            // Mark as transfer in YNAB
+            filteredTransactions[index].transfer_account_id = accountId;
+            filteredTransactions[index].category_name = 'SKIP_TRANSFER';
+            filteredTransactions[index].payee_name = `Transfer: ${accountName}`;
+            renderTransactions();
+            updateStats();
+            closePaymentTransferModal();
+        }
+
+        // Open Split modal
+        function openSplitModal(index) {
+            closeCategoryModal();
+            const txn = filteredTransactions[index];
+
+            const overlay = document.createElement('div');
+            overlay.className = 'category-modal-overlay';
+            overlay.id = 'splitModalOverlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) closeSplitModal();
+            };
+
+            overlay.innerHTML = `
+                <div class="split-modal" onclick="event.stopPropagation()">
+                    <div class="split-modal-header">
+                        <h3>Split Transaction</h3>
+                        <div class="split-total">Total: $${(Math.abs(txn.amount) / 1000).toFixed(2)}</div>
+                    </div>
+                    <div class="split-modal-body" id="splitModalBody">
+                        <div class="split-row">
+                            <select class="split-payee-select">
+                                <option value="">payee</option>
+                            </select>
+                            <select class="split-category-select">
+                                <option value="">category</option>
+                                ${categoryGroups.map(group => `
+                                    <optgroup label="${escapeHtml(group.name)}">
+                                        ${group.categories.map(cat => `
+                                            <option value="${cat.id}">${escapeHtml(cat.name)}</option>
+                                        `).join('')}
+                                    </optgroup>
+                                `).join('')}
+                            </select>
+                            <input type="text" class="split-memo-input" placeholder="memo" />
+                            <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
+                            <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
+                        </div>
+                        <div class="split-row">
+                            <select class="split-payee-select">
+                                <option value="">payee</option>
+                            </select>
+                            <select class="split-category-select">
+                                <option value="">category</option>
+                                ${categoryGroups.map(group => `
+                                    <optgroup label="${escapeHtml(group.name)}">
+                                        ${group.categories.map(cat => `
+                                            <option value="${cat.id}">${escapeHtml(cat.name)}</option>
+                                        `).join('')}
+                                    </optgroup>
+                                `).join('')}
+                            </select>
+                            <input type="text" class="split-memo-input" placeholder="memo" />
+                            <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
+                            <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
+                        </div>
+                        <button class="add-split-button" onclick="addSplitRow()">Add another split</button>
+                    </div>
+                    <div class="split-modal-footer">
+                        <div class="split-remaining">Amount remaining to assign: <span id="splitRemaining">${(Math.abs(txn.amount) / 1000).toFixed(2)}</span></div>
+                        <div class="split-modal-actions">
+                            <button class="split-cancel-button" onclick="closeSplitModal()">Cancel</button>
+                            <button class="split-save-button" onclick="saveSplitTransaction(${index})">Save</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+        }
+
+        // Close Split modal
+        function closeSplitModal() {
+            const overlay = document.getElementById('splitModalOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Add split row
+        function addSplitRow() {
+            const modalBody = document.getElementById('splitModalBody');
+            const newRow = document.createElement('div');
+            newRow.className = 'split-row';
+            newRow.innerHTML = `
+                <select class="split-payee-select">
+                    <option value="">payee</option>
+                </select>
+                <select class="split-category-select">
+                    <option value="">category</option>
+                    ${categoryGroups.map(group => `
+                        <optgroup label="${escapeHtml(group.name)}">
+                            ${group.categories.map(cat => `
+                                <option value="${cat.id}">${escapeHtml(cat.name)}</option>
+                            `).join('')}
+                        </optgroup>
+                    `).join('')}
+                </select>
+                <input type="text" class="split-memo-input" placeholder="memo" />
+                <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
+                <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
+            `;
+            modalBody.insertBefore(newRow, modalBody.querySelector('.add-split-button'));
+        }
+
+        // Save split transaction
+        function saveSplitTransaction(index) {
+            // Mark as split transaction
+            filteredTransactions[index].category_name = 'Split (Multiple Categories...)';
+            filteredTransactions[index].is_split = true;
+            renderTransactions();
+            updateStats();
+            closeSplitModal();
+        }
+
+        // Update transaction category (legacy - kept for compatibility)
         function updateCategory(index, categoryId) {
             filteredTransactions[index].category_id = categoryId;
             updateStats();
@@ -410,17 +1205,21 @@
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const uncategorizedOnly = document.getElementById('uncategorizedFilter').checked;
-            
-            filteredTransactions = transactions.filter(txn => {
-                const matchesSearch = !searchTerm || txn.payee.toLowerCase().includes(searchTerm);
+
+            // Start with account-filtered transactions
+            applyAccountFilter();
+
+            // Then apply search and uncategorized filters
+            filteredTransactions = filteredTransactions.filter(txn => {
+                const matchesSearch = !searchTerm || txn.payee_name.toLowerCase().includes(searchTerm);
                 const matchesUncategorized = !uncategorizedOnly || !txn.category_id;
                 return matchesSearch && matchesUncategorized;
             });
-            
+
             if (currentSort) {
                 applySortToFiltered(currentSort);
             }
-            
+
             renderTransactions();
             updateStats();
         }

@@ -25,6 +25,28 @@ This section contains high-confidence categorization rules learned from:
 - **Date Added**: {YYYY-MM-DD}
 ```
 
+### Transfer Detection Rule (Tier 1 - Priority 1)
+
+- **Pattern**: `^Transfer\s*:.*`
+- **Pattern Type**: regex
+- **Category**: null (do not categorize - YNAB transfers are not categorized)
+- **Confidence**: High
+- **Source**: YNAB Standard Behavior
+- **Date Added**: 2025-11-28
+- **Reasoning**: YNAB transfers between budget accounts should not be categorized. They represent movement of money between accounts in the same budget and are tracked via payee only.
+- **Note**: Matches "Transfer : Wells Fargo", "Transfer: Citi Credit Card", "Transfer :Wealthfront" etc.
+
+### Inflow Detection Rule (Tier 1 - Priority 2)
+
+- **Pattern**: `amount > 0` (positive transaction amounts)
+- **Pattern Type**: amount-based
+- **Category**: Ready to Assign (Inflow)
+- **Confidence**: High
+- **Source**: YNAB Standard Behavior
+- **Date Added**: 2025-11-28
+- **Reasoning**: YNAB standard behavior - all inflows (income) are categorized as "Ready to Assign" unless they are transfers. This includes paychecks, reimbursements, and any other money coming into budget accounts.
+- **Note**: Applied after transfer detection, so transfer inflows are excluded
+
 ---
 
 ## Split Transaction Patterns

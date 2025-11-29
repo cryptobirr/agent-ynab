@@ -18,8 +18,19 @@ class VaultClient:
             return False
     
     def kv_get(self, path):
-        """Read secret from KV store"""
+        """Read secret from KV store (supports both KV v1 and v2)"""
         headers = {"X-Vault-Token": self.token}
+
+        # Try KV v2 first (path needs /data/ inserted)
+        if path.startswith('secret/') and '/data/' not in path:
+            v2_path = path.replace('secret/', 'secret/data/', 1)
+            resp = requests.get(f"{self.addr}/v1/{v2_path}", headers=headers)
+            if resp.status_code == 200:
+                data = resp.json().get('data', {})
+                if 'data' in data:
+                    return data['data']  # KV v2
+
+        # Fallback to KV v1 or direct path
         resp = requests.get(f"{self.addr}/v1/{path}", headers=headers)
         if resp.status_code == 200:
             return resp.json().get('data', {})

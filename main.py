@@ -8,6 +8,11 @@ Starts the web server and opens the browser automatically.
 import asyncio
 import webbrowser
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from templates.web_server import app
 
 # Configure logging

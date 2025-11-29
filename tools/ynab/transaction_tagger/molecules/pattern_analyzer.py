@@ -144,7 +144,7 @@ def analyze_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     match = find_historical_category(
         payee_name=payee_name,
         amount=amount,
-        min_confidence=0.80  # 80% threshold per PRD
+        min_confidence=0.0  # Return top match regardless of confidence percentage
     )
     
     # 4. No match found
