@@ -8,6 +8,7 @@ Layer: 3 (Organisms - Complex business logic compositions)
 """
 from typing import List, Dict, Any
 import logging
+import html
 import json
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,7 @@ def _generate_grid_html(transactions: List[Dict]) -> str:
             category_display = '<span class="split-indicator">[Split Transaction]</span>'
             category_click = f"onclick=\"openSplitModal('{txn['id']}')\""
         else:
-            category_display = txn['category_name']
+            category_display = html.escape(txn['category_name'])
             category_click = f"onclick=\"openCategoryModal('{txn['id']}')\""
         
         # Tier badge
@@ -177,8 +178,8 @@ def _generate_grid_html(transactions: List[Dict]) -> str:
         <tr data-txn-id="{txn['id']}" class="txn-row">
             <td><input type="checkbox" class="txn-checkbox" data-txn-id="{txn['id']}"></td>
             <td>{txn['date']}</td>
-            <td class="payee-cell">{txn['payee_name']}</td>
-            <td class="memo-cell">{txn.get('memo', '')}</td>
+            <td class="payee-cell">{html.escape(txn['payee_name'])}</td>
+            <td class="memo-cell">{html.escape(txn.get('memo', ''))}</td>
             <td class="{amount_class}">{amount_str}</td>
             <td class="category-cell" {category_click}>{category_display}</td>
             <td><span class="{confidence_class}">{confidence_pct}</span></td>
@@ -220,12 +221,12 @@ def _generate_category_modal_html(category_groups: List[Dict]) -> str:
         categories_html = []
         for cat in group['categories']:
             categories_html.append(
-                f'<div class="category-item" data-group-id="{group["id"]}" data-category-id="{cat["id"]}" onclick="selectCategory(\'{group["id"]}\', \'{cat["id"]}\', \'{cat["name"]}\')">{cat["name"]}</div>'
+                f'<div class="category-item" data-group-id="{group["id"]}" data-category-id="{cat["id"]}" onclick="selectCategory(\'{group["id"]}\', \'{cat["id"]}\', \'{html.escape(cat["name"])}\')">{html.escape(cat["name"])}</div>'
             )
         
         group_html = f"""
         <div class="category-group">
-            <div class="category-group-name">{group['name']}</div>
+            <div class="category-group-name">{html.escape(group['name'])}</div>
             <div class="category-list">
                 {''.join(categories_html)}
             </div>
