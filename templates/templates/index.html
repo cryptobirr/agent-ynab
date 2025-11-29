@@ -5,38 +5,555 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YNAB Transaction Tagger</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f7f8fa;
             color: #333;
+            line-height: 1.6;
         }
-        .placeholder {
-            background-color: white;
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-        .note {
-            color: #666;
-            font-style: italic;
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .toolbar {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .toolbar button:hover {
+            background-color: #2980b9;
+        }
+
+        .toolbar button.submit {
+            background-color: #27ae60;
+        }
+
+        .toolbar button.submit:hover {
+            background-color: #229954;
+        }
+
+        .toolbar input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 250px;
+        }
+
+        .toolbar select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .toolbar label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .stats {
+            background-color: #ecf0f1;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-left: auto;
+        }
+
+        .transaction-grid {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #34495e;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #2c3e50;
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+        }
+
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        tr.selected {
+            background-color: #e3f2fd;
+        }
+
+        .amount {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .amount.positive {
+            color: #27ae60;
+        }
+
+        .amount.negative {
+            color: #e74c3c;
+        }
+
+        select.category-selector {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            font-size: 13px;
+        }
+
+        select.category-selector.uncategorized {
+            border-color: #e74c3c;
+            background-color: #fee;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar input[type="text"],
+            .toolbar select {
+                width: 100%;
+            }
+
+            .stats {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>YNAB Transaction Tagger</h1>
-    <div class="placeholder">
-        <p>This is a placeholder interface.</p>
-        <p class="note">Frontend template will be implemented in Story 5.3</p>
-        <p>Available API endpoints:</p>
-        <ul>
-            <li><code>GET /api/load-and-tag</code> - Trigger workflow</li>
-            <li><code>POST /api/submit</code> - Submit tagged transactions</li>
-        </ul>
+    <div class="container">
+        <header>
+            <h1>YNAB Transaction Tagger</h1>
+            <p>Review and categorize your transactions with AI-powered suggestions</p>
+        </header>
+
+        <div id="message" class="message"></div>
+
+        <div class="toolbar">
+            <button id="loadBtn" onclick="loadTransactions()">Load Transactions</button>
+            <button id="submitBtn" class="submit" onclick="submitTransactions()">Submit Tagged</button>
+            
+            <input type="text" id="searchInput" placeholder="Search by payee..." onkeyup="applyFilters()">
+            
+            <select id="sortSelect" onchange="applySort()">
+                <option value="">Sort by...</option>
+                <option value="date-desc">Date (Newest)</option>
+                <option value="date-asc">Date (Oldest)</option>
+                <option value="amount-desc">Amount (High to Low)</option>
+                <option value="amount-asc">Amount (Low to High)</option>
+                <option value="payee-asc">Payee (A-Z)</option>
+                <option value="payee-desc">Payee (Z-A)</option>
+            </select>
+            
+            <label>
+                <input type="checkbox" id="uncategorizedFilter" onchange="applyFilters()">
+                Show Uncategorized Only
+            </label>
+            
+            <div class="stats" id="stats">
+                <span id="statsText">No transactions loaded</span>
+            </div>
+        </div>
+
+        <div class="transaction-grid">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th class="sortable" onclick="sortBy('date')">Date</th>
+                        <th class="sortable" onclick="sortBy('payee')">Payee</th>
+                        <th class="sortable" onclick="sortBy('category')">Category</th>
+                        <th class="sortable" onclick="sortBy('amount')">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTableBody">
+                    <tr>
+                        <td colspan="5" class="loading">Click "Load Transactions" to begin</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script>
+        // Global state
+        let transactions = [];
+        let filteredTransactions = [];
+        let categories = [];
+        let currentSort = null;
+
+        // Show message to user
+        function showMessage(text, type = 'info') {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = `message ${type} show`;
+            setTimeout(() => msgEl.classList.remove('show'), 5000);
+        }
+
+        // Load transactions from API
+        async function loadTransactions() {
+            const loadBtn = document.getElementById('loadBtn');
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/load-and-tag');
+                const result = await response.json();
+                
+                if (result.status === 'error') {
+                    throw new Error(result.message);
+                }
+                
+                transactions = result.data.transactions || [];
+                categories = result.data.categories || [];
+                
+                filteredTransactions = [...transactions];
+                renderTransactions();
+                updateStats();
+                showMessage(`Loaded ${transactions.length} transactions`, 'success');
+                
+            } catch (error) {
+                showMessage(`Error loading transactions: ${error.message}`, 'error');
+                console.error('Load error:', error);
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Load Transactions';
+            }
+        }
+
+        // Render transactions to table
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionTableBody');
+            
+            if (filteredTransactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No transactions to display</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredTransactions.map((txn, idx) => `
+                <tr class="${txn.selected ? 'selected' : ''}" data-index="${idx}">
+                    <td><input type="checkbox" ${txn.selected ? 'checked' : ''} onchange="toggleTransaction(${idx})"></td>
+                    <td>${formatDate(txn.date)}</td>
+                    <td>${escapeHtml(txn.payee)}</td>
+                    <td>
+                        <select class="category-selector ${!txn.category_id ? 'uncategorized' : ''}" 
+                                onchange="updateCategory(${idx}, this.value)">
+                            <option value="">-- Select Category --</option>
+                            ${categories.map(cat => `
+                                <option value="${cat.id}" ${txn.category_id === cat.id ? 'selected' : ''}>
+                                    ${escapeHtml(cat.name)}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </td>
+                    <td class="amount ${txn.amount >= 0 ? 'positive' : 'negative'}">
+                        ${formatCurrency(txn.amount)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update transaction category
+        function updateCategory(index, categoryId) {
+            filteredTransactions[index].category_id = categoryId;
+            updateStats();
+        }
+
+        // Toggle transaction selection
+        function toggleTransaction(index) {
+            filteredTransactions[index].selected = !filteredTransactions[index].selected;
+            renderTransactions();
+            updateStats();
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            filteredTransactions.forEach(txn => txn.selected = checked);
+            renderTransactions();
+            updateStats();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const uncategorizedOnly = document.getElementById('uncategorizedFilter').checked;
+            
+            filteredTransactions = transactions.filter(txn => {
+                const matchesSearch = !searchTerm || txn.payee.toLowerCase().includes(searchTerm);
+                const matchesUncategorized = !uncategorizedOnly || !txn.category_id;
+                return matchesSearch && matchesUncategorized;
+            });
+            
+            if (currentSort) {
+                applySortToFiltered(currentSort);
+            }
+            
+            renderTransactions();
+            updateStats();
+        }
+
+        // Apply sort
+        function applySort() {
+            const sortValue = document.getElementById('sortSelect').value;
+            if (!sortValue) return;
+            
+            currentSort = sortValue;
+            applySortToFiltered(sortValue);
+            renderTransactions();
+        }
+
+        // Sort filtered transactions
+        function applySortToFiltered(sortValue) {
+            const [field, direction] = sortValue.split('-');
+            const multiplier = direction === 'asc' ? 1 : -1;
+            
+            filteredTransactions.sort((a, b) => {
+                let valA = a[field];
+                let valB = b[field];
+                
+                if (field === 'date') {
+                    valA = new Date(valA);
+                    valB = new Date(valB);
+                }
+                
+                if (typeof valA === 'string') {
+                    return multiplier * valA.localeCompare(valB);
+                }
+                
+                return multiplier * (valA - valB);
+            });
+        }
+
+        // Submit tagged transactions
+        async function submitTransactions() {
+            const selectedTxns = filteredTransactions.filter(txn => txn.selected && txn.category_id);
+            
+            if (selectedTxns.length === 0) {
+                showMessage('Please select transactions with categories to submit', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            try {
+                const payload = {
+                    transactions: selectedTxns.map(txn => ({
+                        id: txn.id,
+                        category_id: txn.category_id
+                    }))
+                };
+                
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'error') {
+                    throw new Error(result.message);
+                }
+                
+                showMessage(result.message || 'Transactions submitted successfully', 'success');
+                
+                // Remove submitted transactions
+                filteredTransactions = filteredTransactions.filter(txn => !txn.selected || !txn.category_id);
+                transactions = transactions.filter(txn => !txn.selected || !txn.category_id);
+                
+                renderTransactions();
+                updateStats();
+                
+            } catch (error) {
+                showMessage(`Error submitting: ${error.message}`, 'error');
+                console.error('Submit error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Tagged';
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = filteredTransactions.length;
+            const categorized = filteredTransactions.filter(txn => txn.category_id).length;
+            const selected = filteredTransactions.filter(txn => txn.selected).length;
+            
+            document.getElementById('statsText').textContent = 
+                `${total} transactions | ${categorized} categorized | ${selected} selected`;
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            const formatted = Math.abs(amount / 1000).toFixed(2);
+            return amount >= 0 ? `$${formatted}` : `-$${formatted}`;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            
+            if (e.key === 'l' && e.ctrlKey) {
+                e.preventDefault();
+                loadTransactions();
+            } else if (e.key === 's' && e.ctrlKey) {
+                e.preventDefault();
+                submitTransactions();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('YNAB Transaction Tagger initialized');
+        });
+    </script>
 </body>
 </html>
