@@ -51,7 +51,7 @@ This section contains high-confidence categorization rules learned from:
 
 - **Pattern**: `^Amazon` (payee starts with "Amazon")
 - **Pattern Type**: regex + invoice matching
-- **Category**: Multi-category split based on invoice line items
+- **Category**: AMAZON_INVOICE_PROCESSING
 - **Confidence**: High (0.95+ for matched items, 0.0 for unmatched)
 - **Source**: Invoice-Level Categorization System
 - **Date Added**: 2025-12-07

@@ -179,41 +179,90 @@ def _extract_line_items(text: str) -> List[Dict[str, Any]]:
     """
     Extract individual line items from invoice.
 
-    This is a simple implementation that looks for common patterns.
-    May need refinement based on actual invoice format.
+    Amazon invoice format:
+    - Product name on multiple lines
+    - "Sold by: ..." line
+    - "Return or replace items: ..." line
+    - Price on its own line: $XX.XX
     """
     items = []
-
-    # Pattern: product name followed by quantity and price
-    # Example: "USB-C Cable, 6ft    1    $12.99"
     lines = text.split('\n')
 
-    for i, line in enumerate(lines):
-        # Skip header/footer lines
-        if any(keyword in line.lower() for keyword in ['subtotal', 'tax', 'shipping', 'total', 'order date', 'invoice']):
-            continue
+    # Keywords to skip
+    skip_keywords = [
+        'subtotal', 'tax', 'shipping', 'total', 'order date', 'invoice',
+        'order summary', 'ship to', 'payment method', 'grand total',
+        'sold by:', 'return or replace', 'eligible through', 'conditions of use',
+        'privacy notice', 'amazon.com', 'your package', 'delivered'
+    ]
 
-        # Look for price pattern: $XX.XX
-        price_match = re.search(r'\$(\d+\.\d{2})', line)
-        if price_match:
-            price = Decimal(price_match.group(1))
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
 
-            # Look for quantity (number before price)
-            qty_match = re.search(r'\b(\d+)\s+\$', line)
-            quantity = int(qty_match.group(1)) if qty_match else 1
+        # Look for standalone price line (just $XX.XX, possibly with whitespace)
+        price_only_match = re.match(r'^\s*\$(\d+\.\d{2})\s*$', line)
 
-            # Item name is everything before quantity/price
-            name_end = qty_match.start() if qty_match else price_match.start()
-            name = line[:name_end].strip()
+        if price_only_match:
+            price = Decimal(price_only_match.group(1))
 
-            if name and len(name) > 3:  # Reasonable name length
-                items.append({
-                    'name': name,
-                    'asin': None,  # ASIN extraction requires more complex parsing
-                    'quantity': quantity,
-                    'unit_price': price / quantity if quantity > 0 else price,
-                    'total_price': price
-                })
+            # Work backward to find product name
+            product_lines = []
+            j = i - 1
+
+            # Skip intermediate lines like "Sold by:" and "Return or replace items:"
+            intermediate_keywords = ['sold by:', 'return or replace', 'eligible through']
+            stop_keywords = [
+                'subtotal', 'tax', 'shipping', 'total', 'order date', 'invoice',
+                'order summary', 'ship to', 'payment method', 'grand total',
+                'conditions of use', 'privacy notice', 'amazon.com',
+                'your package', 'delivered'
+            ]
+
+            while j >= 0:
+                prev_line = lines[j].strip()
+
+                # Stop if we hit a hard stop keyword or another price
+                if any(kw in prev_line.lower() for kw in stop_keywords):
+                    break
+                if re.search(r'\$\d+\.\d{2}', prev_line):
+                    break
+
+                # Skip intermediate lines (Sold by, Return policy, etc.)
+                if any(kw in prev_line.lower() for kw in intermediate_keywords):
+                    j -= 1
+                    continue
+
+                # Skip empty lines
+                if not prev_line:
+                    j -= 1
+                    continue
+
+                # Add non-empty line to product name (we'll reverse later)
+                product_lines.insert(0, prev_line)
+                j -= 1
+
+                # Stop after collecting reasonable amount of text
+                if len(' '.join(product_lines)) > 200:
+                    break
+
+            # Construct product name from collected lines
+            if product_lines:
+                name = ' '.join(product_lines).strip()
+
+                # Clean up name (remove extra whitespace)
+                name = re.sub(r'\s+', ' ', name)
+
+                if len(name) > 3:  # Reasonable name length
+                    items.append({
+                        'name': name,
+                        'asin': None,
+                        'quantity': 1,  # Amazon invoices typically don't show quantity explicitly
+                        'unit_price': price,
+                        'total_price': price
+                    })
+
+        i += 1
 
     return items
 

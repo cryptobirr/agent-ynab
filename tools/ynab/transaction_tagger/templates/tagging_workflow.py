@@ -306,31 +306,49 @@ def _process_amazon_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]
                 'reasoning': f'Amazon invoice directory not found. Please configure invoice download.'
             }
 
-        # Find invoice by amount and date (filename format: YYYYMMDD-amount-...)
+        # Find invoice by amount and date with fuzzy matching
+        # Amazon invoices dated when ordered, YNAB shows when posted (1-3 days later)
         invoice_file = None
-        date_prefix = txn_date.replace('-', '')  # YYYYMMDD
-        amount_str = f"{amount_dollars:.2f}"
+        best_match = None
+        best_score = 0
 
-        for pdf in invoice_dir.glob(f"{date_prefix}-{amount_str}*.pdf"):
-            invoice_file = pdf
-            break
+        from datetime import datetime, timedelta
+        txn_datetime = datetime.strptime(txn_date, '%Y-%m-%d')
+
+        # Search all invoices (not just exact date)
+        for pdf in invoice_dir.glob("*.pdf"):
+            parts = pdf.stem.split('-')
+            if len(parts) < 3:
+                continue
+
+            try:
+                # Parse invoice date and amount
+                invoice_date_str = parts[0]  # YYYYMMDD
+                invoice_amount = float(parts[1])
+                invoice_datetime = datetime.strptime(invoice_date_str, '%Y%m%d')
+
+                # Calculate match score
+                amount_diff = abs(invoice_amount - amount_dollars)
+                date_diff = abs((invoice_datetime - txn_datetime).days)
+
+                # Match criteria:
+                # - Amount within $0.50
+                # - Date within ±5 days (Amazon can take time to post)
+                if amount_diff <= 0.50 and date_diff <= 5:
+                    # Score: exact match = 100, deduct for differences
+                    score = 100 - (amount_diff * 10) - (date_diff * 5)
+
+                    if score > best_score:
+                        best_score = score
+                        best_match = pdf
+
+            except (ValueError, IndexError):
+                continue
+
+        invoice_file = best_match
 
         if not invoice_file:
-            # Try fuzzy match on amount (within $0.10)
-            for pdf in invoice_dir.glob(f"{date_prefix}-*.pdf"):
-                # Extract amount from filename
-                parts = pdf.stem.split('-')
-                if len(parts) >= 2:
-                    try:
-                        file_amount = float(parts[1])
-                        if abs(file_amount - amount_dollars) < 0.10:
-                            invoice_file = pdf
-                            break
-                    except ValueError:
-                        continue
-
-        if not invoice_file:
-            logger.warning(f"No invoice found for Amazon transaction {txn_date} ${amount_str}")
+            logger.warning(f"No invoice found for Amazon transaction {txn_date} ${amount_dollars:.2f}")
             return {
                 **txn,
                 'category_id': None,
@@ -339,11 +357,11 @@ def _process_amazon_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]
                 'confidence': 0.0,
                 'tier': 'amazon',
                 'method': 'amazon_invoice',
-                'reasoning': f'No invoice found for {txn_date} ${amount_str}. Download invoice with: ait-amazon download --update'
+                'reasoning': f'No invoice found for {txn_date} ${amount_dollars:.2f}. Download invoice with: ait-amazon download --update'
             }
 
         # 2. Parse invoice
-        logger.info(f"Found invoice: {invoice_file.name}")
+        logger.info(f"Found invoice: {invoice_file.name} (match score: {best_score:.0f}/100)")
         invoice_data = parse_amazon_invoice(str(invoice_file))
 
         if not invoice_data:
