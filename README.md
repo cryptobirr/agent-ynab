@@ -15,6 +15,95 @@ This application analyzes your YNAB transactions and suggests categorizations us
 - **Keyboard Shortcuts:** Power-user efficiency (Ctrl+L, Ctrl+S)
 - **Filtering & Sorting:** Focus on what matters
 
+## Business Logic
+
+### 3-Tier Categorization System
+
+The application uses a hierarchical decision system to categorize transactions with increasing computational cost:
+
+**Tier 1: SOP Rules (Highest Priority)**
+- Explicit rules defined in `categorization_rules.md`
+- Confidence: 100% (1.0)
+- Handles special cases:
+  - **Transfers**: YNAB transfers (`Transfer: Account Name`) are not categorized
+  - **Inflows**: Positive amounts default to "Ready to Assign" per YNAB standard
+  - **User Corrections**: Rules learned from user feedback
+  - **Core Patterns**: Pre-defined merchant patterns
+- Returns immediately when matched
+
+**Tier 2: Historical Pattern Matching**
+- Analyzes historical transaction patterns using PostgreSQL
+- Minimum confidence threshold: 80% (0.80)
+- Matches based on:
+  - Payee name similarity
+  - Transaction amount (optional)
+  - Historical categorization frequency
+- Returns top match with reasoning: `"Based on 47 previous transactions with 'Starbucks', 95% were categorized as 'Coffee Shops'"`
+
+**Tier 3: AI Research + Reasoning** *(Future)*
+- Uses Claude AI with web search for novel merchants
+- Lowest confidence threshold
+- Applied only when Tier 1 and Tier 2 find no match
+
+### Continuous Learning System
+
+The application learns from user interactions to improve accuracy over time:
+
+**Recording Agent Decisions**
+- Tracks which tier was used (1, 2, or 3)
+- Stores confidence scores (0.0-1.0)
+- Records categorization timestamp
+- Updates transaction metadata:
+  - `categorization_tier`
+  - `confidence_score`
+  - `categorization_timestamp`
+
+**Learning from User Corrections**
+- When user changes agent's suggestion:
+  1. Marks transaction with `user_corrected = True`
+  2. Automatically appends new rule to `categorization_rules.md`
+  3. Future transactions with same payee use corrected category
+- Correction data includes:
+  - Original agent suggestion
+  - User's correct category
+  - Reasoning (optional)
+  - Learning timestamp
+
+### Workflow Orchestration
+
+**Load & Tag Flow:**
+1. Fetch uncategorized transactions from YNAB API
+2. Load SOP rules from `categorization_rules.md`
+3. For each transaction:
+   - Check Tier 1 (SOP rules) → return if matched
+   - Check Tier 2 (historical patterns) → return if matched
+   - Mark as "needs review" if no match
+4. Store all results in PostgreSQL
+5. Return suggestions to web interface
+
+**Submit Flow:**
+1. User reviews and approves categorizations
+2. Validate payload and permissions
+3. Sync approved changes to YNAB via API
+4. Record agent decisions for learning
+5. Record any user corrections
+6. Update SOP rules if corrections occurred
+
+### Data Persistence
+
+**PostgreSQL Schema:**
+- `ynab_transactions`: Transaction data with learning metadata
+  - Tracks categorization tier, confidence, timestamps
+  - Flags user corrections
+  - Maintains sync versioning
+- Historical pattern analysis via SQL functions
+- Atomic upsert operations (ON CONFLICT UPDATE)
+
+**Two-Budget Architecture:**
+- `INIT_BUDGET_ID`: One-time historical data import
+- `TARGET_BUDGET_ID`: Ongoing operations
+- Prevents duplicate historical processing
+
 ## Architecture
 
 Built on a layered molecular architecture:

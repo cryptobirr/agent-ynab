@@ -200,6 +200,16 @@ def _check_sop_rules(txn: Dict[str, Any], rules: Dict[str, Any]) -> Optional[Dic
             'reasoning': 'YNAB standard: Inflows are categorized as "Ready to Assign"'
         }
 
+    # PRIORITY 3: Check for Amazon transactions - invoice-level categorization
+    # Pattern: payee starts with "Amazon"
+    if re.match(r'^Amazon', payee_name, re.IGNORECASE):
+        return {
+            'category_id': None,
+            'category_name': 'AMAZON_INVOICE_PROCESSING',  # Special marker for Amazon
+            'confidence': 1.0,
+            'reasoning': 'Amazon transaction - will parse invoice and split across categories'
+        }
+
     payee_name_lower = payee_name.lower()
 
     # Check user corrections first (highest priority after transfers)
@@ -249,6 +259,152 @@ def _check_sop_rules(txn: Dict[str, Any], rules: Dict[str, Any]) -> Optional[Dic
     return None
 
 
+def _process_amazon_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Process Amazon transaction with invoice-level categorization.
+
+    Automatically:
+    1. Matches transaction to invoice by amount/date
+    2. Parses invoice PDF if not already parsed
+    3. Categorizes line items from database
+    4. Returns split transaction or needs_review
+
+    Args:
+        txn: YNAB transaction dict
+
+    Returns:
+        Dict with categorization result or None if processing fails
+    """
+    try:
+        from pathlib import Path
+        from tools.ynab.transaction_tagger.molecules.amazon_parser import (
+            parse_amazon_invoice,
+            store_amazon_items
+        )
+        from tools.ynab.transaction_tagger.molecules.amazon_categorizer import (
+            categorize_amazon_transaction
+        )
+
+        logger.info(f"Processing Amazon transaction {txn.get('id')}: ${abs(txn.get('amount', 0)) / 1000000:.2f}")
+
+        # 1. Find matching invoice by amount and date
+        amount_dollars = abs(txn.get('amount', 0)) / 1000000
+        txn_date = txn.get('date', '')[:10]  # YYYY-MM-DD
+
+        invoice_dir = Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/Reference/receipts/amazon"
+
+        if not invoice_dir.exists():
+            logger.warning(f"Amazon invoice directory not found: {invoice_dir}")
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Amazon - No Invoices',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'amazon',
+                'method': 'amazon_invoice',
+                'reasoning': f'Amazon invoice directory not found. Please configure invoice download.'
+            }
+
+        # Find invoice by amount and date (filename format: YYYYMMDD-amount-...)
+        invoice_file = None
+        date_prefix = txn_date.replace('-', '')  # YYYYMMDD
+        amount_str = f"{amount_dollars:.2f}"
+
+        for pdf in invoice_dir.glob(f"{date_prefix}-{amount_str}*.pdf"):
+            invoice_file = pdf
+            break
+
+        if not invoice_file:
+            # Try fuzzy match on amount (within $0.10)
+            for pdf in invoice_dir.glob(f"{date_prefix}-*.pdf"):
+                # Extract amount from filename
+                parts = pdf.stem.split('-')
+                if len(parts) >= 2:
+                    try:
+                        file_amount = float(parts[1])
+                        if abs(file_amount - amount_dollars) < 0.10:
+                            invoice_file = pdf
+                            break
+                    except ValueError:
+                        continue
+
+        if not invoice_file:
+            logger.warning(f"No invoice found for Amazon transaction {txn_date} ${amount_str}")
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Amazon - No Invoice',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'amazon',
+                'method': 'amazon_invoice',
+                'reasoning': f'No invoice found for {txn_date} ${amount_str}. Download invoice with: ait-amazon download --update'
+            }
+
+        # 2. Parse invoice
+        logger.info(f"Found invoice: {invoice_file.name}")
+        invoice_data = parse_amazon_invoice(str(invoice_file))
+
+        if not invoice_data:
+            logger.error(f"Failed to parse invoice: {invoice_file}")
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Amazon - Parse Error',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'amazon',
+                'method': 'amazon_invoice',
+                'reasoning': f'Invoice parse failed: {invoice_file.name}. Check PDF format.'
+            }
+
+        # 3. Store items in database (idempotent)
+        store_amazon_items(
+            order_id=invoice_data['order_id'],
+            items=invoice_data['items'],
+            order_date=invoice_data['order_date']
+        )
+
+        # 4. Categorize using database
+        result = categorize_amazon_transaction(txn, invoice_data)
+
+        if not result:
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Amazon - Categorization Error',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'amazon',
+                'method': 'amazon_invoice',
+                'reasoning': 'Failed to categorize Amazon items'
+            }
+
+        # 5. Return enriched result
+        return {
+            **txn,
+            **result,
+            'tier': 'amazon',
+            'source': 'amazon_categorizer'
+        }
+
+    except Exception as e:
+        logger.error(f"Amazon transaction processing error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            **txn,
+            'category_id': None,
+            'category_name': 'Amazon - System Error',
+            'type': 'single',
+            'confidence': 0.0,
+            'tier': 'amazon',
+            'method': 'amazon_invoice',
+            'reasoning': f'System error: {str(e)}'
+        }
+
+
 def _categorize_transaction(txn: Dict[str, Any], rules: Dict[str, Any]) -> Dict[str, Any]:
     """
     Apply 3-tier categorization logic to single transaction.
@@ -269,17 +425,26 @@ def _categorize_transaction(txn: Dict[str, Any], rules: Dict[str, Any]) -> Dict[
     # Tier 1: SOP Rules
     sop_match = _check_sop_rules(txn, rules)
     if sop_match and sop_match['confidence'] >= TIER_1_CONFIDENCE_THRESHOLD:
-        logger.debug(f"Tier 1 (SOP) match for {txn_id}: {sop_match['category_name']}")
-        return {
-            **txn,
-            'category_id': sop_match.get('category_id') or txn.get('category_id'),
-            'category_name': sop_match['category_name'],
-            'type': 'single',
-            'confidence': sop_match['confidence'],
-            'tier': 'sop',
-            'method': 'sop',
-            'reasoning': sop_match['reasoning']
-        }
+        # Handle special markers
+        if sop_match['category_name'] == 'AMAZON_INVOICE_PROCESSING':
+            # Process Amazon transaction with invoice parsing
+            logger.info(f"Amazon transaction detected for {txn_id}, processing invoice...")
+            amazon_result = _process_amazon_transaction(txn)
+            if amazon_result:
+                return amazon_result
+            # If Amazon processing failed, fall through to other tiers
+        else:
+            logger.debug(f"Tier 1 (SOP) match for {txn_id}: {sop_match['category_name']}")
+            return {
+                **txn,
+                'category_id': sop_match.get('category_id') or txn.get('category_id'),
+                'category_name': sop_match['category_name'],
+                'type': 'single',
+                'confidence': sop_match['confidence'],
+                'tier': 'sop',
+                'method': 'sop',
+                'reasoning': sop_match['reasoning']
+            }
     
     # Tier 2: Historical Patterns
     historical_match = analyze_transaction(txn)
@@ -313,28 +478,31 @@ def _categorize_transaction(txn: Dict[str, Any], rules: Dict[str, Any]) -> Dict[
 def _build_summary(transactions: List[Dict[str, Any]]) -> Dict[str, int]:
     """
     Build summary statistics for categorized transactions.
-    
+
     Args:
         transactions: List of categorized transactions
-    
+
     Returns:
         Summary dict:
         {
             'total': 100,
             'sop_matches': 45,
             'historical_matches': 40,
+            'amazon_invoices': 8,
             'needs_review': 15
         }
     """
     total = len(transactions)
     sop_matches = sum(1 for t in transactions if t.get('tier') == 'sop')
     historical_matches = sum(1 for t in transactions if t.get('tier') == 'historical')
+    amazon_invoices = sum(1 for t in transactions if t.get('tier') == 'amazon')
     needs_review = sum(1 for t in transactions if t.get('tier') == 'research')
-    
+
     return {
         'total': total,
         'sop_matches': sop_matches,
         'historical_matches': historical_matches,
+        'amazon_invoices': amazon_invoices,
         'needs_review': needs_review
     }
 

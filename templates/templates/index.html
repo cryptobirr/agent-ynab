@@ -295,42 +295,45 @@
             border-radius: 8px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 800px;
-            max-height: 80vh;
+            max-width: 1200px;
+            max-height: 70vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
         .split-modal-header {
-            padding: 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background-color: #f8f9fa;
         }
 
         .split-modal-header h3 {
             margin: 0;
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .split-total {
-            font-size: 14px;
-            color: #7f8c8d;
+            font-size: 13px;
+            color: #666;
         }
 
         .split-modal-body {
-            padding: 16px;
+            padding: 12px 16px;
             overflow-y: auto;
             flex: 1;
+            background-color: #fafbfc;
         }
 
         .split-row {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1.5fr 0.8fr 0.8fr;
-            gap: 8px;
-            margin-bottom: 12px;
+            grid-template-columns: 1.2fr 1.8fr 2fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
             align-items: center;
         }
 
@@ -339,22 +342,37 @@
         .split-memo-input,
         .split-outflow-input,
         .split-inflow-input {
-            padding: 8px;
+            padding: 6px 8px;
             border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 3px;
+            font-size: 13px;
+            background-color: white;
+            height: 32px;
+        }
+
+        .split-payee-select:focus,
+        .split-category-select:focus,
+        .split-memo-input:focus,
+        .split-outflow-input:focus,
+        .split-inflow-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
         }
 
         .add-split-button {
-            margin-top: 12px;
-            padding: 8px 16px;
+            margin-top: 8px;
+            padding: 6px 12px;
             border: 1px solid #3498db;
-            border-radius: 4px;
+            border-radius: 3px;
             background-color: white;
             color: #3498db;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .add-split-button:hover {
@@ -362,29 +380,41 @@
         }
 
         .split-modal-footer {
-            padding: 16px;
+            padding: 12px 16px;
             border-top: 1px solid #e0e0e0;
             background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .split-remaining {
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: #7f8c8d;
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            gap: 16px;
+        }
+
+        .split-remaining-label {
+            font-weight: 500;
+        }
+
+        .split-remaining-amounts {
+            display: flex;
+            gap: 12px;
         }
 
         .split-modal-actions {
             display: flex;
             gap: 8px;
-            justify-content: flex-end;
         }
 
         .split-cancel-button,
         .split-save-button {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 3px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
@@ -396,7 +426,7 @@
         }
 
         .split-cancel-button:hover {
-            background-color: #f8f9fa;
+            background-color: #e8e8e8;
         }
 
         .split-save-button {
@@ -1124,7 +1154,13 @@
                         <button class="add-split-button" onclick="addSplitRow()">Add another split</button>
                     </div>
                     <div class="split-modal-footer">
-                        <div class="split-remaining">Amount remaining to assign: <span id="splitRemaining">${(Math.abs(txn.amount) / 1000).toFixed(2)}</span></div>
+                        <div class="split-remaining">
+                            <span class="split-remaining-label">Amount remaining to assign:</span>
+                            <div class="split-remaining-amounts">
+                                <span id="splitRemainingOutflow">${(Math.abs(txn.amount) / 1000).toFixed(2)}</span>
+                                <span id="splitRemainingInflow">0.00</span>
+                            </div>
+                        </div>
                         <div class="split-modal-actions">
                             <button class="split-cancel-button" onclick="closeSplitModal()">Cancel</button>
                             <button class="split-save-button" onclick="saveSplitTransaction(${index})">Save</button>
@@ -1134,6 +1170,16 @@
             `;
 
             document.body.appendChild(overlay);
+
+            // Store total amounts as data attributes
+            const totalAmount = Math.abs(txn.amount) / 1000;
+            overlay.setAttribute('data-total-outflow', txn.amount < 0 ? totalAmount : 0);
+            overlay.setAttribute('data-total-inflow', txn.amount > 0 ? totalAmount : 0);
+
+            // Add event listeners to all split input fields
+            document.querySelectorAll('.split-outflow-input, .split-inflow-input').forEach(input => {
+                input.addEventListener('input', updateSplitRemaining);
+            });
         }
 
         // Close Split modal
@@ -1168,6 +1214,39 @@
                 <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
             `;
             modalBody.insertBefore(newRow, modalBody.querySelector('.add-split-button'));
+
+            // Add event listeners to the new inputs
+            newRow.querySelectorAll('.split-outflow-input, .split-inflow-input').forEach(input => {
+                input.addEventListener('input', updateSplitRemaining);
+            });
+        }
+
+        // Calculate and update split remaining amounts
+        function updateSplitRemaining() {
+            const modal = document.getElementById('splitModalOverlay');
+            if (!modal) return;
+
+            const totalOutflow = parseFloat(modal.getAttribute('data-total-outflow')) || 0;
+            const totalInflow = parseFloat(modal.getAttribute('data-total-inflow')) || 0;
+
+            // Calculate sum of all split rows
+            let outflowSum = 0;
+            let inflowSum = 0;
+
+            document.querySelectorAll('.split-row').forEach(row => {
+                const outflow = parseFloat(row.querySelector('.split-outflow-input').value) || 0;
+                const inflow = parseFloat(row.querySelector('.split-inflow-input').value) || 0;
+                outflowSum += outflow;
+                inflowSum += inflow;
+            });
+
+            // Calculate remaining amounts
+            const remainingOutflow = totalOutflow - outflowSum;
+            const remainingInflow = totalInflow - inflowSum;
+
+            // Update display
+            document.getElementById('splitRemainingOutflow').textContent = remainingOutflow.toFixed(2);
+            document.getElementById('splitRemainingInflow').textContent = remainingInflow.toFixed(2);
         }
 
         // Save split transaction

@@ -125,16 +125,30 @@ def initialize_database() -> Dict[str, Any]:
         
         logger.info("Initialization flag set successfully")
         
-        # Step 6: Return success status
+        # Step 6: Initialize Amazon-specific tables (idempotent)
+        logger.info("Initializing Amazon categorization tables...")
+        try:
+            from tools.ynab.transaction_tagger.atoms.amazon_db_init import initialize_amazon_tables
+            amazon_success = initialize_amazon_tables()
+            if amazon_success:
+                logger.info("Amazon tables initialized successfully")
+            else:
+                logger.warning("Amazon tables initialization failed - Amazon categorization may not work")
+        except Exception as e:
+            logger.warning(f"Amazon tables initialization error: {e} - Continuing with main initialization")
+
+        # Step 7: Return success status
         tables_created = [
             'ynab_transactions',
             'ynab_split_transactions',
             'sop_rules',
-            'agent_metadata'
+            'agent_metadata',
+            'amazon_items',
+            'amazon_order_totals'
         ]
-        
+
         logger.info(f"Database initialization complete. Created {len(tables_created)} tables.")
-        
+
         return {
             'status': 'initialized',
             'version': '1.0.0',
