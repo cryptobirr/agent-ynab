@@ -105,6 +105,40 @@ def fetch_categories(budget_id: str) -> List[Dict]:
     return categories
 
 
+def fetch_accounts(budget_id: str) -> List[Dict]:
+    """
+    Fetch all accounts from YNAB API for a given budget.
+
+    Filters out closed and deleted accounts.
+
+    Args:
+        budget_id: YNAB budget identifier
+
+    Returns:
+        List of account dictionaries (non-closed, non-deleted only)
+
+    Raises:
+        YNABAPIError: On API errors (401, 404, 429, network errors)
+
+    Example:
+        >>> accounts = fetch_accounts('budget-123')
+        >>> accounts[0]['name']
+        'Checking Account'
+    """
+    client = BaseYNABClient()
+
+    # Fetch accounts
+    response = client.get(f'/budgets/{budget_id}/accounts')
+    data = response.get('data', {})
+    accounts = data.get('accounts', [])
+
+    # Filter out closed and deleted accounts
+    return [
+        acc for acc in accounts
+        if not acc.get('closed') and not acc.get('deleted')
+    ]
+
+
 def fetch_category_groups(budget_id: str) -> List[Dict]:
     """
     Fetch category groups with their nested categories from YNAB API.

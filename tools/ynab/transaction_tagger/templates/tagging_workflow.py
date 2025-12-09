@@ -210,6 +210,16 @@ def _check_sop_rules(txn: Dict[str, Any], rules: Dict[str, Any]) -> Optional[Dic
             'reasoning': 'Amazon transaction - will parse invoice and split across categories'
         }
 
+    # PRIORITY 4: Check for Costco transactions - receipt-level categorization
+    # Pattern: payee contains "Costco"
+    if 'costco' in payee_name.lower():
+        return {
+            'category_id': None,
+            'category_name': 'COSTCO_RECEIPT_PROCESSING',  # Special marker for Costco
+            'confidence': 1.0,
+            'reasoning': 'Costco transaction - will parse receipt and split across categories'
+        }
+
     payee_name_lower = payee_name.lower()
 
     # Check user corrections first (highest priority after transfers)
@@ -285,13 +295,13 @@ def _process_amazon_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]
             categorize_amazon_transaction
         )
 
-        logger.info(f"Processing Amazon transaction {txn.get('id')}: ${abs(txn.get('amount', 0)) / 1000000:.2f}")
+        logger.info(f"Processing Amazon transaction {txn.get('id')}: ${abs(txn.get('amount', 0)) / 1000:.2f}")
 
         # 1. Find matching invoice by amount and date
-        amount_dollars = abs(txn.get('amount', 0)) / 1000000
+        amount_dollars = abs(txn.get('amount', 0)) / 1000
         txn_date = txn.get('date', '')[:10]  # YYYY-MM-DD
 
-        invoice_dir = Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/Reference/receipts/amazon"
+        invoice_dir = Path("/Users/mekonen/Developer/ai-tools/tools/amazon/puppeteer-impl/invoices")
 
         if not invoice_dir.exists():
             logger.warning(f"Amazon invoice directory not found: {invoice_dir}")
@@ -423,6 +433,107 @@ def _process_amazon_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]
         }
 
 
+def _process_costco_transaction(txn: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Process Costco transaction with receipt-level categorization.
+
+    Automatically:
+    1. Matches transaction to receipt by amount/date
+    2. Parses markdown receipt
+    3. Categorizes line items using keyword rules
+    4. Returns split transaction
+
+    Args:
+        txn: YNAB transaction dict
+
+    Returns:
+        Dict with categorization result or None if processing fails
+    """
+    try:
+        from tools.ynab.transaction_tagger.molecules.costco_parser import (
+            parse_costco_receipt,
+            find_matching_receipt
+        )
+        from tools.ynab.transaction_tagger.molecules.costco_categorizer import (
+            categorize_costco_transaction
+        )
+
+        logger.info(f"Processing Costco transaction {txn.get('id')}: ${abs(txn.get('amount', 0)) / 1000:.2f}")
+
+        # 1. Find matching receipt by amount and date
+        receipt_path = find_matching_receipt(txn)
+
+        if not receipt_path:
+            amount_dollars = abs(txn.get('amount', 0)) / 1000
+            txn_date = txn.get('date', '')[:10]
+            logger.warning(f"No receipt found for Costco transaction {txn_date} ${amount_dollars:.2f}")
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Costco - No Receipt',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'costco',
+                'method': 'costco_receipt',
+                'reasoning': f'No receipt found for {txn_date} ${amount_dollars:.2f}. Download receipt with: ait-costco download --update'
+            }
+
+        # 2. Parse receipt
+        logger.info(f"Found receipt: {receipt_path.name}")
+        receipt_data = parse_costco_receipt(receipt_path)
+
+        if not receipt_data:
+            logger.error(f"Failed to parse receipt: {receipt_path}")
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Costco - Parse Error',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'costco',
+                'method': 'costco_receipt',
+                'reasoning': f'Receipt parse failed: {receipt_path.name}. Check markdown format.'
+            }
+
+        # 3. Categorize using keyword rules
+        result = categorize_costco_transaction(txn, receipt_data)
+
+        if not result:
+            return {
+                **txn,
+                'category_id': None,
+                'category_name': 'Costco - Categorization Error',
+                'type': 'single',
+                'confidence': 0.0,
+                'tier': 'costco',
+                'method': 'costco_receipt',
+                'reasoning': 'Failed to categorize Costco items'
+            }
+
+        # 4. Return enriched result
+        return {
+            **txn,
+            **result,
+            'tier': 'costco',
+            'source': 'costco_categorizer'
+        }
+
+    except Exception as e:
+        logger.error(f"Costco transaction processing error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            **txn,
+            'category_id': None,
+            'category_name': 'Costco - System Error',
+            'type': 'single',
+            'confidence': 0.0,
+            'tier': 'costco',
+            'method': 'costco_receipt',
+            'reasoning': f'System error: {str(e)}'
+        }
+
+
 def _categorize_transaction(txn: Dict[str, Any], rules: Dict[str, Any]) -> Dict[str, Any]:
     """
     Apply 3-tier categorization logic to single transaction.
@@ -451,6 +562,13 @@ def _categorize_transaction(txn: Dict[str, Any], rules: Dict[str, Any]) -> Dict[
             if amazon_result:
                 return amazon_result
             # If Amazon processing failed, fall through to other tiers
+        elif sop_match['category_name'] == 'COSTCO_RECEIPT_PROCESSING':
+            # Process Costco transaction with receipt parsing
+            logger.info(f"Costco transaction detected for {txn_id}, processing receipt...")
+            costco_result = _process_costco_transaction(txn)
+            if costco_result:
+                return costco_result
+            # If Costco processing failed, fall through to other tiers
         else:
             logger.debug(f"Tier 1 (SOP) match for {txn_id}: {sop_match['category_name']}")
             return {
@@ -507,6 +625,7 @@ def _build_summary(transactions: List[Dict[str, Any]]) -> Dict[str, int]:
             'sop_matches': 45,
             'historical_matches': 40,
             'amazon_invoices': 8,
+            'costco_receipts': 5,
             'needs_review': 15
         }
     """
@@ -514,6 +633,7 @@ def _build_summary(transactions: List[Dict[str, Any]]) -> Dict[str, int]:
     sop_matches = sum(1 for t in transactions if t.get('tier') == 'sop')
     historical_matches = sum(1 for t in transactions if t.get('tier') == 'historical')
     amazon_invoices = sum(1 for t in transactions if t.get('tier') == 'amazon')
+    costco_receipts = sum(1 for t in transactions if t.get('tier') == 'costco')
     needs_review = sum(1 for t in transactions if t.get('tier') == 'research')
 
     return {
@@ -521,6 +641,7 @@ def _build_summary(transactions: List[Dict[str, Any]]) -> Dict[str, int]:
         'sop_matches': sop_matches,
         'historical_matches': historical_matches,
         'amazon_invoices': amazon_invoices,
+        'costco_receipts': costco_receipts,
         'needs_review': needs_review
     }
 
@@ -669,13 +790,16 @@ def generate_recommendations(
             transactions = fetch_transactions(budget_id, since_date=start_date)
             
             # Filter by uncategorized if requested
-            # Definition: unapproved OR uncleared OR no category
+            # For transfers: only include if unapproved (transfers don't have categories by design)
+            # For regular transactions: include if unapproved OR uncleared OR no category
             if uncategorized_only:
                 transactions = [
                     t for t in transactions
-                    if not t.get('approved') or
-                       t.get('cleared') == 'uncleared' or
-                       not t.get('category_id')
+                    if (t.get('transfer_account_id') and not t.get('approved')) or  # Unapproved transfers
+                       (not t.get('transfer_account_id') and  # Regular transactions
+                        (not t.get('approved') or
+                         t.get('cleared') == 'uncleared' or
+                         not t.get('category_id')))
                 ]
             
             # Filter by date range
@@ -684,18 +808,43 @@ def generate_recommendations(
                 transactions = [t for t in transactions 
                               if datetime.fromisoformat(t['date']) <= end]
             
-            # Categorize each transaction
-            categorized = []
-            for txn in transactions:
-                categorized.append(_categorize_transaction(txn, rules))
-            
-            # Fetch category groups
+            # Fetch category groups FIRST (needed for enrichment)
             try:
                 from tools.ynab.transaction_tagger.atoms.api_fetch import fetch_category_groups
                 category_groups = fetch_category_groups(budget_id)
             except YNABAPIError as e:
                 logger.warning(f"Failed to fetch categories for {budget_name}: {e}")
                 category_groups = []
+
+            # Build category_id -> category_group_name lookup
+            category_lookup = {}
+            for group in category_groups:
+                for category in group.get('categories', []):
+                    category_lookup[category['id']] = {
+                        'category_name': category['name'],
+                        'category_group_name': group['name']
+                    }
+
+            # Categorize each transaction (with category group enrichment)
+            categorized = []
+            for txn in transactions:
+                enriched_txn = _categorize_transaction(txn, rules)
+
+                # Add category_group_name by looking up category_id
+                if enriched_txn.get('category_id'):
+                    if enriched_txn['category_id'] in category_lookup:
+                        enriched_txn['category_group_name'] = category_lookup[enriched_txn['category_id']]['category_group_name']
+                    else:
+                        # Category ID not in current budget (deleted/renamed)
+                        # Try to find by category_name as fallback
+                        cat_name = enriched_txn.get('category_name', '').strip()
+                        for cat_id, cat_info in category_lookup.items():
+                            if cat_info['category_name'].strip() == cat_name:
+                                enriched_txn['category_group_name'] = cat_info['category_group_name']
+                                enriched_txn['category_id'] = cat_id  # Update to current category_id
+                                break
+
+                categorized.append(enriched_txn)
             
             # Build summary
             summary = _build_summary(categorized)

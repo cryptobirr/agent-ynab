@@ -13,8 +13,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f7f8fa;
-            color: #333;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             line-height: 1.6;
         }
 
@@ -25,28 +25,34 @@
         }
 
         header {
-            background-color: #fff;
+            background-color: #2a2a2a;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
         }
 
         h1 {
-            color: #2c3e50;
+            color: #ffffff;
             margin-bottom: 10px;
         }
 
+        header p {
+            color: #b0b0b0;
+        }
+
         .toolbar {
-            background-color: #fff;
+            background-color: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin-bottom: 20px;
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             align-items: center;
+            border: 1px solid #3a3a3a;
         }
 
         .toolbar button {
@@ -74,17 +80,21 @@
 
         .toolbar input[type="text"] {
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #444;
             border-radius: 4px;
             font-size: 14px;
             width: 250px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
         }
 
         .toolbar select {
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #444;
             border-radius: 4px;
             font-size: 14px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
         }
 
         .toolbar label {
@@ -95,25 +105,28 @@
         }
 
         .stats {
-            background-color: #ecf0f1;
+            background-color: #1a1a1a;
             padding: 10px 15px;
             border-radius: 4px;
             font-size: 14px;
             margin-left: auto;
+            border: 1px solid #444;
+            color: #b0b0b0;
         }
 
         /* Account Tabs */
         .account-tabs {
-            background-color: #fff;
+            background-color: #2a2a2a;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin-bottom: 20px;
             overflow: hidden;
+            border: 1px solid #3a3a3a;
         }
 
         .tabs-header {
             display: flex;
-            border-bottom: 2px solid #ecf0f1;
+            border-bottom: 2px solid #3a3a3a;
             overflow-x: auto;
         }
 
@@ -125,19 +138,19 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            color: #7f8c8d;
+            color: #888;
             transition: all 0.2s;
             white-space: nowrap;
         }
 
         .tab-button:hover {
-            background-color: #f8f9fa;
-            color: #2c3e50;
+            background-color: #333;
+            color: #e0e0e0;
         }
 
         .tab-button.active {
-            color: #3498db;
-            border-bottom-color: #3498db;
+            color: #5dade2;
+            border-bottom-color: #5dade2;
         }
 
         .tab-badge {
@@ -151,6 +164,10 @@
             font-weight: 600;
         }
 
+        .tab-badge.zero {
+            background-color: #27ae60;
+        }
+
         /* Category Selector Modal */
         .category-modal-overlay {
             position: fixed;
@@ -158,7 +175,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -167,26 +184,27 @@
         }
 
         .category-modal {
-            background: white;
+            background: #2a2a2a;
             border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             width: 100%;
             max-width: 400px;
             max-height: 600px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            border: 1px solid #444;
         }
 
         .category-modal-header {
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #444;
             padding: 16px;
         }
 
         .category-modal-selected {
             font-size: 12px;
             font-weight: 600;
-            color: #7f8c8d;
+            color: #888;
             text-transform: uppercase;
             margin-bottom: 8px;
         }
@@ -204,39 +222,42 @@
 
         .category-search-container {
             padding: 12px 16px;
-            border-bottom: 1px solid #e0e0e0;
-            background-color: #f8f9fa;
+            border-bottom: 1px solid #444;
+            background-color: #1a1a1a;
         }
 
         .category-search-input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #d0d0d0;
+            border: 1px solid #444;
             border-radius: 4px;
             font-size: 14px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             outline: none;
             transition: border-color 0.2s;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
         }
 
         .category-search-input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: #5dade2;
+            box-shadow: 0 0 0 3px rgba(93, 173, 226, 0.2);
         }
 
         .category-modal-actions {
             display: flex;
             gap: 8px;
             padding: 12px 16px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #444;
         }
 
         .category-action-button {
             flex: 1;
             padding: 10px 16px;
-            border: 1px solid #d0d0d0;
+            border: 1px solid #444;
             border-radius: 4px;
-            background-color: white;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -244,8 +265,8 @@
         }
 
         .category-action-button:hover {
-            background-color: #f8f9fa;
-            border-color: #3498db;
+            background-color: #333;
+            border-color: #5dade2;
         }
 
         .category-modal-body {
@@ -255,16 +276,16 @@
         }
 
         .category-group {
-            border-bottom: 1px solid #f5f5f5;
+            border-bottom: 1px solid #333;
         }
 
         .category-group-header {
             padding: 8px 16px;
             font-size: 12px;
             font-weight: 600;
-            color: #7f8c8d;
+            color: #888;
             text-transform: uppercase;
-            background-color: #f8f9fa;
+            background-color: #1a1a1a;
         }
 
         .category-item {
@@ -278,10 +299,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            color: #e0e0e0;
         }
 
         .category-item:hover {
-            background-color: #e3f2fd;
+            background-color: #333;
         }
 
         .category-item .checkmark {
@@ -291,24 +313,25 @@
 
         /* Split Transaction Modal */
         .split-modal {
-            background: white;
+            background: #2a2a2a;
             border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             width: 100%;
             max-width: 1200px;
             max-height: 70vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            border: 1px solid #444;
         }
 
         .split-modal-header {
             padding: 12px 16px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #444;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #f8f9fa;
+            background-color: #1a1a1a;
         }
 
         .split-modal-header h3 {
@@ -326,7 +349,7 @@
             padding: 12px 16px;
             overflow-y: auto;
             flex: 1;
-            background-color: #fafbfc;
+            background-color: #1a1a1a;
         }
 
         .split-row {
@@ -343,10 +366,11 @@
         .split-outflow-input,
         .split-inflow-input {
             padding: 6px 8px;
-            border: 1px solid #d0d0d0;
+            border: 1px solid #444;
             border-radius: 3px;
             font-size: 13px;
-            background-color: white;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
             height: 32px;
         }
 
@@ -356,17 +380,17 @@
         .split-outflow-input:focus,
         .split-inflow-input:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+            border-color: #5dade2;
+            box-shadow: 0 0 0 2px rgba(93, 173, 226, 0.2);
         }
 
         .add-split-button {
             margin-top: 8px;
             padding: 6px 12px;
-            border: 1px solid #3498db;
+            border: 1px solid #5dade2;
             border-radius: 3px;
-            background-color: white;
-            color: #3498db;
+            background-color: #1a1a1a;
+            color: #5dade2;
             font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
@@ -376,13 +400,13 @@
         }
 
         .add-split-button:hover {
-            background-color: #e3f2fd;
+            background-color: #333;
         }
 
         .split-modal-footer {
             padding: 12px 16px;
-            border-top: 1px solid #e0e0e0;
-            background-color: #f8f9fa;
+            border-top: 1px solid #444;
+            background-color: #1a1a1a;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -390,7 +414,7 @@
 
         .split-remaining {
             font-size: 13px;
-            color: #666;
+            color: #b0b0b0;
             display: flex;
             gap: 16px;
         }
@@ -412,7 +436,7 @@
         .split-cancel-button,
         .split-save-button {
             padding: 8px 16px;
-            border: 1px solid #d0d0d0;
+            border: 1px solid #444;
             border-radius: 3px;
             font-size: 13px;
             font-weight: 500;
@@ -421,28 +445,29 @@
         }
 
         .split-cancel-button {
-            background-color: white;
-            color: #666;
+            background-color: #1a1a1a;
+            color: #b0b0b0;
         }
 
         .split-cancel-button:hover {
-            background-color: #e8e8e8;
+            background-color: #333;
         }
 
         .split-save-button {
-            background-color: #3498db;
-            color: white;
-            border-color: #3498db;
+            background-color: #5dade2;
+            color: #1a1a1a;
+            border-color: #5dade2;
         }
 
         .split-save-button:hover {
-            background-color: #2980b9;
+            background-color: #4a9dd1;
         }
 
         .category-button {
             padding: 8px 16px;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #e0e0e0;
             border-radius: 4px;
             cursor: pointer;
             text-align: left;
@@ -451,39 +476,40 @@
         }
 
         .category-button:hover {
-            border-color: #3498db;
-            background-color: #f8f9fa;
+            border-color: #5dade2;
+            background-color: #333;
         }
 
         .category-button.uncategorized {
-            background-color: #fff3cd;
-            border-color: #ffc107;
+            background-color: #3d3416;
+            border-color: #d4a017;
+            color: #f0d090;
         }
 
         .category-button.transfer {
-            background-color: #f0f0f0;
-            border-color: #bbb;
-            color: #666;
+            background-color: #2a2a2a;
+            border-color: #555;
+            color: #888;
             cursor: not-allowed;
             font-style: italic;
         }
 
         .category-button.transfer:hover {
-            background-color: #f0f0f0;
-            border-color: #bbb;
+            background-color: #2a2a2a;
+            border-color: #555;
         }
 
         .category-button.inflow {
-            background-color: #d4edda;
-            border-color: #28a745;
-            color: #155724;
+            background-color: #1a3a1a;
+            border-color: #2d5a2d;
+            color: #7ec87e;
             cursor: not-allowed;
             font-weight: 500;
         }
 
         .category-button.inflow:hover {
-            background-color: #d4edda;
-            border-color: #28a745;
+            background-color: #1a3a1a;
+            border-color: #2d5a2d;
         }
 
         /* AI Suggestion Badges */
@@ -523,11 +549,16 @@
             background-color: #3498db;
         }
 
+        .tab-button.active .tab-badge.zero {
+            background-color: #27ae60;
+        }
+
         .transaction-grid {
-            background-color: #fff;
+            background-color: #2a2a2a;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             overflow-x: auto;
+            border: 1px solid #3a3a3a;
         }
 
         table {
@@ -536,8 +567,8 @@
         }
 
         thead {
-            background-color: #34495e;
-            color: white;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             position: sticky;
             top: 0;
         }
@@ -551,7 +582,7 @@
         }
 
         th:hover {
-            background-color: #2c3e50;
+            background-color: #222;
         }
 
         th.sortable::after {
@@ -571,25 +602,53 @@
 
         td {
             padding: 12px;
-            border-bottom: 1px solid #ecf0f1;
+            border-bottom: 1px solid #3a3a3a;
         }
 
         tr:hover {
-            background-color: #f8f9fa;
+            background-color: #333;
         }
 
         tr.selected {
-            background-color: #e3f2fd;
+            background-color: #2a4a5a;
         }
 
         .memo {
             font-size: 12px;
-            color: #7f8c8d;
+            color: #888;
             font-style: italic;
             max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        }
+
+        .memo-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #888;
+            font-size: 12px;
+            font-style: italic;
+            font-family: inherit;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .memo-input:hover {
+            border-color: #444;
+            background-color: #1a1a1a;
+        }
+
+        .memo-input:focus {
+            outline: none;
+            border-color: #5dade2;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-style: normal;
+        }
+
+        .memo-input::placeholder {
+            color: #555;
+            font-style: italic;
         }
 
         .amount {
@@ -598,24 +657,26 @@
         }
 
         .amount.positive {
-            color: #27ae60;
+            color: #5ec85e;
         }
 
         .amount.negative {
-            color: #e74c3c;
+            color: #ff6b6b;
         }
 
         select.category-selector {
             padding: 6px 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #444;
             border-radius: 4px;
             width: 200px;
             font-size: 13px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
         }
 
         select.category-selector.uncategorized {
-            border-color: #e74c3c;
-            background-color: #fee;
+            border-color: #ff6b6b;
+            background-color: #3a1a1a;
         }
 
         input[type="checkbox"] {
@@ -632,21 +693,21 @@
         }
 
         .message.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: #1a3a1a;
+            color: #7ec87e;
+            border: 1px solid #2d5a2d;
         }
 
         .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background-color: #3a1a1a;
+            color: #ff9999;
+            border: 1px solid #5a2d2d;
         }
 
         .message.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background-color: #1a2a3a;
+            color: #7eb8e0;
+            border: 1px solid #2d4a5a;
         }
 
         .message.show {
@@ -657,13 +718,13 @@
             text-align: center;
             padding: 40px;
             font-size: 16px;
-            color: #7f8c8d;
+            color: #888;
         }
 
         .no-data {
             text-align: center;
             padding: 40px;
-            color: #7f8c8d;
+            color: #888;
         }
 
         @media (max-width: 768px) {
@@ -702,10 +763,16 @@
                 <option value="">Sort by...</option>
                 <option value="date-desc">Date (Newest)</option>
                 <option value="date-asc">Date (Oldest)</option>
+                <option value="account_name-asc">Account (A-Z)</option>
+                <option value="account_name-desc">Account (Z-A)</option>
                 <option value="amount-desc">Amount (High to Low)</option>
                 <option value="amount-asc">Amount (Low to High)</option>
-                <option value="payee-asc">Payee (A-Z)</option>
-                <option value="payee-desc">Payee (Z-A)</option>
+                <option value="payee_name-asc">Payee (A-Z)</option>
+                <option value="payee_name-desc">Payee (Z-A)</option>
+                <option value="category_name-asc">Category (A-Z)</option>
+                <option value="category_name-desc">Category (Z-A)</option>
+                <option value="memo-asc">Memo (A-Z)</option>
+                <option value="memo-desc">Memo (Z-A)</option>
             </select>
             
             <label>
@@ -730,15 +797,16 @@
                     <tr>
                         <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                         <th class="sortable" onclick="sortBy('date')">Date</th>
-                        <th class="sortable" onclick="sortBy('payee')">Payee</th>
-                        <th>Memo</th>
-                        <th class="sortable" onclick="sortBy('category')">Category</th>
+                        <th class="sortable" onclick="sortBy('account_name')">Account</th>
+                        <th class="sortable" onclick="sortBy('payee_name')">Payee</th>
+                        <th class="sortable" onclick="sortBy('memo')">Memo</th>
+                        <th class="sortable" onclick="sortBy('category_name')">Category</th>
                         <th class="sortable" onclick="sortBy('amount')">Amount</th>
                     </tr>
                 </thead>
                 <tbody id="transactionTableBody">
                     <tr>
-                        <td colspan="6" class="loading">Click "Load Transactions" to begin</td>
+                        <td colspan="7" class="loading">Click "Load Transactions" to begin</td>
                     </tr>
                 </tbody>
             </table>
@@ -755,6 +823,7 @@
         let currentAccount = 'all';
         let categoryGroups = [];
         let currentModalTransactionIndex = null;
+        let budgetId = null;  // Store budget_id for submissions
 
         // Show message to user
         function showMessage(text, type = 'info') {
@@ -771,7 +840,14 @@
             loadBtn.textContent = 'Loading...';
             
             try {
-                const response = await fetch('/api/load-and-tag');
+                // Force no-cache on fetch request
+                const response = await fetch('/api/load-and-tag', {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 const result = await response.json();
                 
                 if (result.status === 'error') {
@@ -781,29 +857,62 @@
                 // Extract transactions from all budgets
                 transactions = [];
                 categories = [];
+                categoryGroups = [];  // CLEAR categoryGroups too!
                 const budgets = result.data.budgets || {};
+
+                // DEBUG: Log what we received
+                console.log('=== API RESPONSE DEBUG ===');
+                console.log('Budgets received:', Object.keys(budgets));
+
+                // Collect all accounts from all budgets
+                let all_accounts = [];
 
                 for (const budgetKey in budgets) {
                     const budget = budgets[budgetKey];
+                    console.log(`${budgetKey} transactions:`, budget.transactions?.length || 0);
+
+                    // Log first 3 transaction payees for verification
+                    if (budget.transactions) {
+                        budget.transactions.slice(0, 3).forEach(t => {
+                            console.log(`  - ${t.date}: ${t.payee_name} (transfer_account_id: ${t.transfer_account_id || 'null'})`);
+                        });
+                    }
+
+                    // Store budget_id (use first budget's ID)
+                    if (!budgetId && budget.budget_id) {
+                        budgetId = budget.budget_id;
+                    }
+
                     if (budget.transactions) {
                         transactions.push(...budget.transactions);
                     }
                     if (budget.category_groups) {
                         categoryGroups.push(...budget.category_groups);
                     }
+
+                    // Collect all_accounts from this budget
+                    if (budget.all_accounts) {
+                        all_accounts.push(...budget.all_accounts);
+                    }
                 }
 
-                // Extract unique accounts from transactions
-                const accountMap = new Map();
-                transactions.forEach(txn => {
-                    if (txn.account_id && txn.account_name) {
-                        accountMap.set(txn.account_id, txn.account_name);
-                    }
-                });
-                accounts = Array.from(accountMap, ([id, name]) => ({ id, name }));
+                console.log('Total transactions loaded:', transactions.length);
+                console.log('=========================')
+                if (all_accounts.length > 0) {
+                    accounts = all_accounts.map(acc => ({ id: acc.id, name: acc.name }));
+                } else {
+                    // Fallback: Extract from transactions
+                    const accountMap = new Map();
+                    transactions.forEach(txn => {
+                        if (txn.account_id && txn.account_name) {
+                            accountMap.set(txn.account_id, txn.account_name);
+                        }
+                    });
+                    accounts = Array.from(accountMap, ([id, name]) => ({ id, name }));
+                }
 
-                // Create account tabs if there are multiple accounts
-                if (accounts.length > 1) {
+                // Always show account tabs if there are multiple accounts
+                if (accounts.length > 0) {
                     createAccountTabs();
                     document.getElementById('accountTabs').style.display = 'block';
                 } else {
@@ -834,16 +943,18 @@
             const allCount = transactions.length;
             const allTab = document.createElement('button');
             allTab.className = 'tab-button' + (currentAccount === 'all' ? ' active' : '');
-            allTab.innerHTML = `All Accounts<span class="tab-badge">${allCount}</span>`;
+            const allBadgeClass = allCount === 0 ? 'tab-badge zero' : 'tab-badge';
+            allTab.innerHTML = `All Accounts<span class="${allBadgeClass}">${allCount}</span>`;
             allTab.onclick = () => switchAccount('all');
             tabsHeader.appendChild(allTab);
 
-            // Add tab for each account
+            // Add tab for each account (showing 0 for accounts with no transactions)
             accounts.forEach(account => {
                 const count = transactions.filter(t => t.account_id === account.id).length;
                 const tab = document.createElement('button');
                 tab.className = 'tab-button' + (currentAccount === account.id ? ' active' : '');
-                tab.innerHTML = `${escapeHtml(account.name)}<span class="tab-badge">${count}</span>`;
+                const badgeClass = count === 0 ? 'tab-badge zero' : 'tab-badge';
+                tab.innerHTML = `${escapeHtml(account.name)} <span class="${badgeClass}">${count}</span>`;
                 tab.onclick = () => switchAccount(account.id);
                 tabsHeader.appendChild(tab);
             });
@@ -871,7 +982,7 @@
             const tbody = document.getElementById('transactionTableBody');
             
             if (filteredTransactions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No transactions to display</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No transactions to display</td></tr>';
                 return;
             }
             
@@ -887,7 +998,7 @@
                 } else if (isInflow) {
                     categoryText = 'Inflow: Ready to Assign';
                 } else if (txn.category_group_name && txn.category_name) {
-                    categoryText = `${txn.category_group_name} : ${txn.category_name}`;
+                    categoryText = `${txn.category_group_name}:${txn.category_name}`;
                 } else if (txn.category_name) {
                     categoryText = txn.category_name;
                 }
@@ -912,11 +1023,19 @@
                     <tr class="${txn.selected ? 'selected' : ''}" data-index="${idx}" title="${txn.reasoning || ''}">
                         <td><input type="checkbox" ${txn.selected ? 'checked' : ''} onchange="toggleTransaction(${idx})"></td>
                         <td>${formatDate(txn.date)}</td>
+                        <td>${escapeHtml(txn.account_name || 'Unknown')}</td>
                         <td>${escapeHtml(txn.payee_name)}</td>
-                        <td class="memo">${escapeHtml(txn.memo || '')}</td>
+                        <td class="memo">
+                            <input type="text"
+                                class="memo-input"
+                                value="${escapeHtml(txn.memo || '')}"
+                                placeholder="Add memo..."
+                                onchange="updateMemo(${idx}, this.value)"
+                                onclick="event.stopPropagation()">
+                        </td>
                         <td>
                             <button class="category-button ${isTransfer ? 'transfer' : isInflow ? 'inflow' : !txn.category_id ? 'uncategorized' : ''}"
-                                    ${isTransfer || isInflow ? 'disabled' : `onclick="openCategoryModal(${idx})"`}>
+                                    ${isTransfer || isInflow ? 'disabled' : `onclick="openTransactionModal(${idx})"`}>
                                 ${escapeHtml(categoryText)}${aiBadges}
                             </button>
                         </td>
@@ -926,6 +1045,31 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        // Update memo for transaction
+        function updateMemo(index, newMemo) {
+            if (index >= 0 && index < filteredTransactions.length) {
+                filteredTransactions[index].memo = newMemo;
+                // Also update in main transactions array
+                const txnId = filteredTransactions[index].id;
+                const mainIndex = transactions.findIndex(t => t.id === txnId);
+                if (mainIndex !== -1) {
+                    transactions[mainIndex].memo = newMemo;
+                }
+            }
+        }
+
+        // Open appropriate modal (split if has subtransactions, otherwise category)
+        function openTransactionModal(index) {
+            const txn = filteredTransactions[index];
+
+            // If transaction has subtransactions, open split modal
+            if (txn.subtransactions && txn.subtransactions.length > 0) {
+                openSplitModal(index);
+            } else {
+                openCategoryModal(index);
+            }
         }
 
         // Open category selector modal
@@ -944,7 +1088,7 @@
             // Get current category display text
             let currentCategoryText = 'Select a category...';
             if (txn.category_group_name && txn.category_name) {
-                currentCategoryText = `${txn.category_group_name} : ${txn.category_name}`;
+                currentCategoryText = `${txn.category_group_name}:${txn.category_name}`;
             } else if (txn.category_name) {
                 currentCategoryText = txn.category_name;
             }
@@ -981,7 +1125,11 @@
                             <div class="category-group" data-group-name="${escapeHtml(group.name)}">
                                 <div class="category-group-header">${escapeHtml(group.name)}</div>
                                 ${group.categories.map(cat => `
-                                    <button class="category-item" data-category-name="${escapeHtml(cat.name)}" onclick="selectCategory('${cat.id}', '${escapeHtml(cat.name)}', '${escapeHtml(group.name)}')">
+                                    <button class="category-item"
+                                        data-category-id="${cat.id}"
+                                        data-category-name="${escapeHtml(cat.name)}"
+                                        data-category-group="${escapeHtml(group.name)}"
+                                        onclick="selectCategoryFromModal(this)">
                                         <span>${escapeHtml(cat.name)}</span>
                                         ${txn.category_id === cat.id ? '<span class="checkmark">✓</span>' : ''}
                                     </button>
@@ -1032,7 +1180,23 @@
             });
         }
 
-        // Select a category from modal
+        // Select a category from modal (using data attributes)
+        function selectCategoryFromModal(button) {
+            const categoryId = button.getAttribute('data-category-id');
+            const categoryName = button.getAttribute('data-category-name');
+            const categoryGroupName = button.getAttribute('data-category-group');
+
+            if (currentModalTransactionIndex !== null) {
+                filteredTransactions[currentModalTransactionIndex].category_id = categoryId;
+                filteredTransactions[currentModalTransactionIndex].category_name = categoryName;
+                filteredTransactions[currentModalTransactionIndex].category_group_name = categoryGroupName;
+                renderTransactions();
+                updateStats();
+            }
+            closeCategoryModal();
+        }
+
+        // Legacy function - keeping for backward compatibility
         function selectCategory(categoryId, categoryName, categoryGroupName) {
             if (currentModalTransactionIndex !== null) {
                 filteredTransactions[currentModalTransactionIndex].category_id = categoryId;
@@ -1108,6 +1272,78 @@
                 if (e.target === overlay) closeSplitModal();
             };
 
+            // Generate split rows HTML
+            const existingSplits = txn.subtransactions || [];
+            let splitRowsHTML = '';
+
+            if (existingSplits.length > 0) {
+                // Load existing splits
+                splitRowsHTML = existingSplits.map(sub => {
+                    const amount = Math.abs(sub.amount) / 1000;
+                    const isOutflow = sub.amount < 0;
+                    return `
+                        <div class="split-row">
+                            <select class="split-payee-select">
+                                <option value="">payee</option>
+                            </select>
+                            <select class="split-category-select">
+                                <option value="">category</option>
+                                ${categoryGroups.map(group => `
+                                    <optgroup label="${escapeHtml(group.name)}">
+                                        ${group.categories.map(cat => `
+                                            <option value="${cat.id}" ${cat.id === sub.category_id ? 'selected' : ''}>${escapeHtml(group.name)}:${escapeHtml(cat.name)}</option>
+                                        `).join('')}
+                                    </optgroup>
+                                `).join('')}
+                            </select>
+                            <input type="text" class="split-memo-input" placeholder="memo" value="${escapeHtml(sub.memo || '')}" />
+                            <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" value="${isOutflow ? amount.toFixed(2) : ''}" />
+                            <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" value="${!isOutflow ? amount.toFixed(2) : ''}" />
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // Create two empty rows for new split
+                splitRowsHTML = `
+                    <div class="split-row">
+                        <select class="split-payee-select">
+                            <option value="">payee</option>
+                        </select>
+                        <select class="split-category-select">
+                            <option value="">category</option>
+                            ${categoryGroups.map(group => `
+                                <optgroup label="${escapeHtml(group.name)}">
+                                    ${group.categories.map(cat => `
+                                        <option value="${cat.id}">${escapeHtml(group.name)}:${escapeHtml(cat.name)}</option>
+                                    `).join('')}
+                                </optgroup>
+                            `).join('')}
+                        </select>
+                        <input type="text" class="split-memo-input" placeholder="memo" />
+                        <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
+                        <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
+                    </div>
+                    <div class="split-row">
+                        <select class="split-payee-select">
+                            <option value="">payee</option>
+                        </select>
+                        <select class="split-category-select">
+                            <option value="">category</option>
+                            ${categoryGroups.map(group => `
+                                <optgroup label="${escapeHtml(group.name)}">
+                                    ${group.categories.map(cat => `
+                                        <option value="${cat.id}">${escapeHtml(group.name)}:${escapeHtml(cat.name)}</option>
+                                    `).join('')}
+                                </optgroup>
+                            `).join('')}
+                        </select>
+                        <input type="text" class="split-memo-input" placeholder="memo" />
+                        <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
+                        <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
+                    </div>
+                `;
+            }
+
             overlay.innerHTML = `
                 <div class="split-modal" onclick="event.stopPropagation()">
                     <div class="split-modal-header">
@@ -1115,42 +1351,7 @@
                         <div class="split-total">Total: $${(Math.abs(txn.amount) / 1000).toFixed(2)}</div>
                     </div>
                     <div class="split-modal-body" id="splitModalBody">
-                        <div class="split-row">
-                            <select class="split-payee-select">
-                                <option value="">payee</option>
-                            </select>
-                            <select class="split-category-select">
-                                <option value="">category</option>
-                                ${categoryGroups.map(group => `
-                                    <optgroup label="${escapeHtml(group.name)}">
-                                        ${group.categories.map(cat => `
-                                            <option value="${cat.id}">${escapeHtml(cat.name)}</option>
-                                        `).join('')}
-                                    </optgroup>
-                                `).join('')}
-                            </select>
-                            <input type="text" class="split-memo-input" placeholder="memo" />
-                            <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
-                            <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
-                        </div>
-                        <div class="split-row">
-                            <select class="split-payee-select">
-                                <option value="">payee</option>
-                            </select>
-                            <select class="split-category-select">
-                                <option value="">category</option>
-                                ${categoryGroups.map(group => `
-                                    <optgroup label="${escapeHtml(group.name)}">
-                                        ${group.categories.map(cat => `
-                                            <option value="${cat.id}">${escapeHtml(cat.name)}</option>
-                                        `).join('')}
-                                    </optgroup>
-                                `).join('')}
-                            </select>
-                            <input type="text" class="split-memo-input" placeholder="memo" />
-                            <input type="number" class="split-outflow-input" placeholder="outflow" step="0.01" />
-                            <input type="number" class="split-inflow-input" placeholder="inflow" step="0.01" />
-                        </div>
+                        ${splitRowsHTML}
                         <button class="add-split-button" onclick="addSplitRow()">Add another split</button>
                     </div>
                     <div class="split-modal-footer">
@@ -1180,6 +1381,9 @@
             document.querySelectorAll('.split-outflow-input, .split-inflow-input').forEach(input => {
                 input.addEventListener('input', updateSplitRemaining);
             });
+
+            // Trigger initial calculation of remaining amount
+            updateSplitRemaining();
         }
 
         // Close Split modal
@@ -1204,7 +1408,7 @@
                     ${categoryGroups.map(group => `
                         <optgroup label="${escapeHtml(group.name)}">
                             ${group.categories.map(cat => `
-                                <option value="${cat.id}">${escapeHtml(cat.name)}</option>
+                                <option value="${cat.id}">${escapeHtml(group.name)}:${escapeHtml(cat.name)}</option>
                             `).join('')}
                         </optgroup>
                     `).join('')}
@@ -1313,70 +1517,164 @@
             renderTransactions();
         }
 
-        // Sort filtered transactions
-        function applySortToFiltered(sortValue) {
-            const [field, direction] = sortValue.split('-');
-            const multiplier = direction === 'asc' ? 1 : -1;
-            
+        // Sort by column header click
+        let currentSortField = null;
+        let currentSortDirection = 'asc';
+
+        function sortBy(field) {
+            // Toggle direction if clicking same field, otherwise default to asc
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortDirection = 'asc';
+            }
+
+            // Sort the filtered transactions
             filteredTransactions.sort((a, b) => {
-                let valA = a[field];
-                let valB = b[field];
-                
+                let valA = a[field] || '';
+                let valB = b[field] || '';
+
+                // Handle dates
                 if (field === 'date') {
                     valA = new Date(valA);
                     valB = new Date(valB);
                 }
-                
-                if (typeof valA === 'string') {
-                    return multiplier * valA.localeCompare(valB);
+
+                // Handle strings (case-insensitive)
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    const comparison = valA.toLowerCase().localeCompare(valB.toLowerCase());
+                    return currentSortDirection === 'asc' ? comparison : -comparison;
                 }
-                
+
+                // Handle numbers
+                const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+                return currentSortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            // Update visual indicators
+            updateSortIndicators(field, currentSortDirection);
+
+            // Re-render
+            renderTransactions();
+        }
+
+        function updateSortIndicators(field, direction) {
+            // Remove all sort classes
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            // Add class to current sorted column
+            const fieldMap = {
+                'date': 0,
+                'account_name': 1,
+                'payee_name': 2,
+                'memo': 3,
+                'category_name': 4,
+                'amount': 5
+            };
+            const index = fieldMap[field];
+            if (index !== undefined) {
+                const headers = document.querySelectorAll('th.sortable');
+                if (headers[index]) {
+                    headers[index].classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            }
+        }
+
+        // Sort filtered transactions (used by dropdown)
+        function applySortToFiltered(sortValue) {
+            const [field, direction] = sortValue.split('-');
+            const multiplier = direction === 'asc' ? 1 : -1;
+
+            filteredTransactions.sort((a, b) => {
+                let valA = a[field] || '';
+                let valB = b[field] || '';
+
+                if (field === 'date') {
+                    valA = new Date(valA);
+                    valB = new Date(valB);
+                }
+
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return multiplier * valA.toLowerCase().localeCompare(valB.toLowerCase());
+                }
+
                 return multiplier * (valA - valB);
             });
         }
 
         // Submit tagged transactions
         async function submitTransactions() {
-            const selectedTxns = filteredTransactions.filter(txn => txn.selected && txn.category_id);
-            
+            // Include transactions with category_id OR transfers (SKIP_TRANSFER)
+            const selectedTxns = filteredTransactions.filter(txn =>
+                txn.selected && (txn.category_id || txn.category_name === 'SKIP_TRANSFER')
+            );
+
             if (selectedTxns.length === 0) {
-                showMessage('Please select transactions with categories to submit', 'error');
+                showMessage('Please select transactions to submit', 'error');
                 return;
             }
-            
+
+            if (!budgetId) {
+                showMessage('Budget ID not available. Please reload transactions.', 'error');
+                return;
+            }
+
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
-            
+
             try {
+                // Map tier to categorization_tier (1=sop, 2=historical, 3=research)
+                const tierMap = { 'sop': 1, 'historical': 2, 'research': 3, 'amazon': 1 };
+
                 const payload = {
-                    transactions: selectedTxns.map(txn => ({
-                        id: txn.id,
-                        category_id: txn.category_id
-                    }))
+                    budget_id: budgetId,
+                    transactions: selectedTxns.map(txn => {
+                        const isTransfer = txn.category_name === 'SKIP_TRANSFER';
+                        return {
+                            transaction_id: txn.id,
+                            category_id: isTransfer ? null : txn.category_id,  // null for transfers
+                            category_name: txn.category_name || 'Unknown',
+                            categorization_tier: tierMap[txn.tier] || 3,
+                            confidence_score: txn.confidence || 0.0,
+                            method: txn.method || 'manual',
+                            memo: txn.memo || null  // Include memo if present
+                        };
+                    })
                 };
-                
+
+                console.log('Submitting payload:', JSON.stringify(payload, null, 2));
+                console.log('budgetId value:', budgetId);
+
                 const response = await fetch('/api/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
+
+                console.log('Response status:', response.status);
                 const result = await response.json();
-                
+                console.log('Response result:', result);
+
                 if (result.status === 'error') {
                     throw new Error(result.message);
                 }
-                
-                showMessage(result.message || 'Transactions submitted successfully', 'success');
-                
+
+                // Show detailed success message
+                const msg = `Processed ${result.succeeded || selectedTxns.length} transactions successfully`;
+                showMessage(msg, 'success');
+                console.log('Success:', msg);
+
                 // Remove submitted transactions
                 filteredTransactions = filteredTransactions.filter(txn => !txn.selected || !txn.category_id);
                 transactions = transactions.filter(txn => !txn.selected || !txn.category_id);
-                
+
                 renderTransactions();
                 updateStats();
-                
+
             } catch (error) {
                 showMessage(`Error submitting: ${error.message}`, 'error');
                 console.error('Submit error:', error);

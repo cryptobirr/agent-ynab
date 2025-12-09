@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def open_browser(host: str = '127.0.0.1', port: int = 5000):
+def open_browser(host: str = '127.0.0.1', port: int = 5001):
     """
     Open web browser to application URL.
     
@@ -39,7 +39,7 @@ def open_browser(host: str = '127.0.0.1', port: int = 5000):
 async def run_server():
     """Run the Quart web server"""
     host = '127.0.0.1'
-    port = 5000
+    port = 5001
     
     logger.info('='*60)
     logger.info('YNAB Transaction Tagger')
